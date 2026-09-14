@@ -1,4 +1,4 @@
-# Shelf — example deployment. One container, one named volume.
+# Shelf - example deployment. One container, one named volume.
 #
 #   docker compose up -d --build
 #   docker compose logs -f           # first boot prints a generated password if none is configured
@@ -12,7 +12,7 @@
 services:
   shelf:
     # Build from source (this checkout). To run a prebuilt image instead, comment out `build:` and use the
-    # published image — no clone needed:  image: ghcr.io/phineasfritsch/shelf:latest
+    # published image - no clone needed:  image: ghcr.io/phineasfritsch/shelf:latest
     build: .
     image: shelf:latest
     restart: unless-stopped
@@ -33,7 +33,7 @@ services:
       # LOG_JSON: "1"               # JSON lines instead of text
     volumes:
       - shelf-data:/data
-      # Bind mount instead (the container runs as uid 1000 — `chown -R 1000:1000 ./data` first):
+      # Bind mount instead (the container runs as uid 1000 - `chown -R 1000:1000 ./data` first):
       # - ./data:/data
     # user: "1000:1000"             # or match the host owner of a bind-mounted ./data
     # secrets: [shelf_password]     # with PASSWORD_FILE above

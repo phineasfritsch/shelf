@@ -1,4 +1,4 @@
-# Remote access via Cloudflare Tunnel — no port forwarding, free HTTPS, works behind CGNAT.
+# Remote access via Cloudflare Tunnel - no port forwarding, free HTTPS, works behind CGNAT.
 #
 #   1. Cloudflare dashboard → Zero Trust → Networks → Tunnels → Create tunnel (connector: cloudflared).
 #      Copy the token. Add a public hostname (e.g. shelf.example.com) whose service is  http://shelf:8080

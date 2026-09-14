@@ -1,6 +1,6 @@
 // Login page: JSON POST to /api/login from a real <form> (so password managers offer autofill),
 // show/hide toggle, 429 countdown driven by Retry-After, and the QR "#link=<token>" claim flow.
-// Classic script (loaded with `defer`); no inline handlers — CSP forbids them.
+// Classic script (loaded with `defer`); no inline handlers - CSP forbids them.
 (function () {
   'use strict';
 
@@ -41,11 +41,11 @@
     submit.disabled = busy;
   }
 
-  // "Too many attempts — try again in N s", ticking once a second until the lock lifts.
+  // "Too many attempts - try again in N s", ticking once a second until the lock lifts.
   function startCountdown(seconds) {
     stopCountdown();
     let left = Math.max(1, Math.ceil(seconds));
-    const render = () => { showError(`Too many attempts — try again in ${left} s`); };
+    const render = () => { showError(`Too many attempts - try again in ${left} s`); };
     render();
     submit.disabled = true;
     countdownTimer = setInterval(() => {
@@ -97,7 +97,7 @@
     }
     if (res.status === 401) { showError(wrong); return false; }
     if (res.status === 429) { startCountdown(retryAfterSeconds(res, data)); return false; }
-    if (res.status === 403) { showError('Request blocked by the origin check — open Shelf by its own address, not through another site.'); return false; }
+    if (res.status === 403) { showError('Request blocked by the origin check - open Shelf by its own address, not through another site.'); return false; }
     const detail = data && (data.message || data.error);
     showError(`Login failed (HTTP ${res.status}${detail ? ': ' + detail : ''})`);
     return false;
@@ -117,7 +117,7 @@
       const ok = handleOutcome(outcome, { wrong: 'Wrong password' });
       if (!ok) { pw.focus(); try { pw.select(); } catch { /* ignore */ } }
     } catch {
-      showError('Cannot reach the server — check the connection and try again');
+      showError('Cannot reach the server - check the connection and try again');
     } finally {
       setBusy(false);
     }
@@ -152,12 +152,12 @@
       const outcome = await postJson('/api/link/claim', { token });
       // Whatever the answer, the token is spent (or invalid): drop it from the URL and history.
       stripFragment();
-      const ok = handleOutcome(outcome, { wrong: 'This link has expired or was already used — scan a new code or enter the password.' });
+      const ok = handleOutcome(outcome, { wrong: 'This link has expired or was already used - scan a new code or enter the password.' });
       if (ok) return;
       showNote('');
     } catch {
       showNote('');
-      showError('Cannot reach the server — reload this page to try the link again, or enter the password.');
+      showError('Cannot reach the server - reload this page to try the link again, or enter the password.');
     } finally {
       setBusy(false);
     }
@@ -169,6 +169,6 @@
   } else if (location.hash && location.hash.indexOf('#link=') === 0) {
     // A mangled token: nothing to claim, do not leave junk in the URL.
     stripFragment();
-    showError('This link is not valid — enter the password instead.');
+    showError('This link is not valid - enter the password instead.');
   }
 })();

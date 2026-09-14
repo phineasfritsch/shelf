@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { splice, shiftSelection, findUrls } from '../public/textdiff.js';
 
-// Applies a splice result to a string — used to check every case round-trips to the new text.
+// Applies a splice result to a string - used to check every case round-trips to the new text.
 function apply(oldS, { index, remove, insert }) {
   return oldS.slice(0, index) + insert + oldS.slice(index + remove);
 }
@@ -77,7 +77,7 @@ describe('splice', () => {
   });
 
   test('never splits a surrogate pair on the prefix side', () => {
-    // 😀 = 😀, 😁 = 😁 — they share the high surrogate
+    // 😀 = 😀, 😁 = 😁 - they share the high surrogate
     const r = splice('a😀', 'a😁', 3);
     assert.deepEqual(r, { index: 1, remove: 2, insert: '😁' });
     assert.equal(apply('a😀', r), 'a😁');

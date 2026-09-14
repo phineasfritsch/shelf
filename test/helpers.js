@@ -56,7 +56,7 @@ export function cookieFromResponse(res) {
 }
 
 // Yjs sync client over an already-constructed ws.WebSocket. Attaches listeners synchronously (before 'open')
-// so the hello / 0x00 frames — which can arrive in the same tick as 'open' — are never missed.
+// so the hello / 0x00 frames - which can arrive in the same tick as 'open' - are never missed.
 function createSyncClient(ws, ydoc, { origin } = {}) {
   const ytext = ydoc.getText('t');
   const client = {
@@ -172,7 +172,7 @@ export async function startTestServer(overrides = {}) {
       return cookie;
     },
 
-    // fetch(path, { cookie, origin, ...init }) — never follows redirects; Origin defaults to the server's own
+    // fetch(path, { cookie, origin, ...init }) - never follows redirects; Origin defaults to the server's own
     // origin (pass origin: null to omit it); cookie is the 'sid=…' string from login().
     fetch(path, { cookie, origin = t.base, headers, ...init } = {}) {
       const h = new Headers(headers || {});

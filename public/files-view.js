@@ -27,7 +27,7 @@
 //           div.f-actions > a.f-btn.f-open? · a.f-btn.f-download · button.f-btn.f-share? · button.f-btn.f-copy
 //                           · button.f-btn.f-keep · button.f-btn.f-delete
 //   └─ p.f-empty (hidden when the grid has cards)
-//   textarea.f-clip is appended to <body> for a few ms during the execCommand copy fallback — CSS should park it
+//   textarea.f-clip is appended to <body> for a few ms during the execCommand copy fallback - CSS should park it
 //   off-screen (position:fixed; top:0; left:0; width:1px; height:1px; opacity:0).
 
 const INLINE_TYPES = new Set([
@@ -119,7 +119,7 @@ function shareSupported() {
 }
 
 // navigator.clipboard when available (secure context), else a hidden textarea + execCommand('copy')
-// — the fallback is what works on plain http://LAN-IP and older iOS Safari.
+// - the fallback is what works on plain http://LAN-IP and older iOS Safari.
 async function copyText(text) {
   try {
     if (!navigator.clipboard || !window.isSecureContext) throw new Error('no clipboard api');
@@ -164,7 +164,7 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
 
   const grid = el('div', 'f-grid');
   grid.setAttribute('role', 'list');
-  const empty = el('p', 'f-empty', 'No files yet — add, paste or drop something and it shows up on every device.');
+  const empty = el('p', 'f-empty', 'No files yet - add, paste or drop something and it shows up on every device.');
   container.appendChild(grid);
   container.appendChild(empty);
 
@@ -408,8 +408,8 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
       await navigator.share({ files: [file], title: f.name });
     } catch (err) {
       if (err && err.name === 'AbortError') return; // user closed the share sheet
-      if (err && err.name === 'NotAllowedError') say('Share not allowed by the browser — use Download instead');
-      else say('Share failed — use Download instead');
+      if (err && err.name === 'NotAllowedError') say('Share not allowed by the browser - use Download instead');
+      else say('Share failed - use Download instead');
     } finally {
       btn.textContent = orig;
       btn.disabled = pendingDeletes.has(f.id);
@@ -443,7 +443,7 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
     }
   }
 
-  // Delete: grey the card, show "Deleted — Undo" and an on-card countdown for UNDO_MS, send DELETE only
+  // Delete: grey the card, show "Deleted - Undo" and an on-card countdown for UNDO_MS, send DELETE only
   // when that time is up. Undo works from the toast, the on-card button, or a click anywhere on the card.
   function softDelete(entry) {
     const id = entry.meta.id;
@@ -486,7 +486,7 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
       // The `files` broadcast removes the card; drop the local row now so it does not linger on a slow socket.
       files = files.filter(x => x.id !== id);
     } catch (err) {
-      say('Delete failed — file kept');
+      say('Delete failed - file kept');
     } finally {
       pendingDeletes.delete(id);
       render();

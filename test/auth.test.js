@@ -280,7 +280,7 @@ describe('auth', () => {
   });
 });
 
-// A plaintext PASSWORD is hashed at boot; the salt is persisted so the hash — and the pwfp session fingerprint —
+// A plaintext PASSWORD is hashed at boot; the salt is persisted so the hash - and the pwfp session fingerprint -
 // is stable across restarts (SPEC §3: only a password *change* logs every device out, SPEC §9 step 27).
 describe('plaintext PASSWORD across restarts', () => {
   let t;

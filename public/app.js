@@ -2,7 +2,7 @@
 // Everything else here is glue: status pill + title, peers badge, file grid wiring, intake (picker / camera /
 // paste / drop / share inbox), toolbar (Copy all / Paste / Clear / count / URL chips), the ⋯ menu and its sheets
 // (History / Devices / Link a phone / Storage / Log out), toasts, --vh, and service-worker registration.
-// CSP: no inline scripts/styles/handlers — all DOM is built with createElement/textContent.
+// CSP: no inline scripts/styles/handlers - all DOM is built with createElement/textContent.
 import * as Y from './vendor/yjs.js';
 import { createNet, clearLocalState } from './net.js';
 import { createEditor } from './editor.js';
@@ -371,7 +371,7 @@ function scheduleChips() {
 editor.onChange(() => { renderCount(); scheduleChips(); });
 // The other device cleared the whole box: offer Undo here as well (a 5 s Undo on the other screen is no help to this one).
 editor.onRemoteClear((prevText) => {
-  toast('Cleared from another device — Undo', { ms: 10000, action: { label: 'Undo', onClick: () => editor.restoreText(prevText) } });
+  toast('Cleared from another device - Undo', { ms: 10000, action: { label: 'Undo', onClick: () => editor.restoreText(prevText) } });
 });
 renderCount();
 renderChips();
@@ -385,13 +385,13 @@ const canReadClipboard = !!(window.isSecureContext && navigator.clipboard && typ
 ui.pasteBtn.hidden = !canReadClipboard;
 ui.pasteBtn.addEventListener('click', async () => {
   let text = '';
-  try { text = await navigator.clipboard.readText(); } catch { toast('Clipboard blocked — paste with Ctrl+V / long-press instead'); return; }
+  try { text = await navigator.clipboard.readText(); } catch { toast('Clipboard blocked - paste with Ctrl+V / long-press instead'); return; }
   if (!text) { toast('Clipboard is empty'); return; }
   editor.insertAtCaret(text);
   editor.focusDesktop();
 });
 
-// "Cleared — Undo": undo only while the clear is still the newest undo step; if the user typed since,
+// "Cleared - Undo": undo only while the clear is still the newest undo step; if the user typed since,
 // undoing would revert their typing instead, so put the old text back as an appended block.
 function undoableToast(label, previousText) {
   const stack = editor.undoManager.undoStack;
@@ -742,7 +742,7 @@ async function fillLink() {
     qr.addData(url);
     qr.make();
     // The SVG string is generated locally from our own URL (no user data); it carries only presentation
-    // attributes, no style="" — safe under the CSP. Parsed with DOMParser and adopted, never innerHTML.
+    // attributes, no style="" - safe under the CSP. Parsed with DOMParser and adopted, never innerHTML.
     svg = svgFromString(qr.createSvgTag({ cellSize: 4, margin: 2 }));
   } catch (err) {
     console.warn('app: QR code unavailable', err);
@@ -770,7 +770,7 @@ async function fillLink() {
   const tick = () => {
     const left = Math.max(0, Math.round((link.expiresAt - net.serverNow()) / 1000));
     if (left <= 0) {
-      timer.textContent = 'This code has expired — generate a new one.';
+      timer.textContent = 'This code has expired - generate a new one.';
       timer.classList.add('link-timer--expired');
       stopLinkTimer();
       return;
@@ -804,8 +804,8 @@ function fillStorage() {
     ['Used by files', cap ? `${formatSize(state.usedBytes)} of ${formatSize(cap)}` : formatSize(state.usedBytes)],
     ['Files', String(state.fileCount)],
     ['Files expire after', ttlText(lim.ttlHours)],
-    ['Largest upload', lim.maxFileMB ? `${lim.maxFileMB} MB` : '—'],
-    ['Text box limit', lim.maxTextKB ? `${lim.maxTextKB} KB (${ytext.length.toLocaleString()} chars now)` : '—'],
+    ['Largest upload', lim.maxFileMB ? `${lim.maxFileMB} MB` : '-'],
+    ['Text box limit', lim.maxTextKB ? `${lim.maxTextKB} KB (${ytext.length.toLocaleString()} chars now)` : '-'],
   ];
   if (cap) {
     const meter = el('progress', 'storage-meter');
@@ -835,7 +835,7 @@ async function logout(everywhere) {
   try {
     await request(everywhere ? '/api/logout-all' : '/api/logout', { method: 'POST' });
   } catch (err) {
-    if (err && err.status === 401) return;     // already logged out — goToLogin() is on its way
+    if (err && err.status === 401) return;     // already logged out - goToLogin() is on its way
     state.loggingOut = false;
     toast(errorText(err, 'Log out failed'));
     net.connect();
@@ -885,7 +885,7 @@ if (/^#link=/.test(location.hash)) {
     if (got.texts) parts.push('text');
     toast(`Received ${parts.join(' and ')} from the share sheet`);
   } else if (shared) {
-    toast('Nothing arrived from the share sheet — try Add files');
+    toast('Nothing arrived from the share sheet - try Add files');
   }
 })();
 

@@ -93,7 +93,7 @@ and `Cache-Control: no-store` on HTML and `/api/*`.
 
 ## Presence
 
-Each connection's caret/selection position is relayed to the other devices as small JSON frames. The identity attached to a caret (a colour and a coarse `OS · Browser` label) is stamped by the server from the session, never taken from the client, and only character offsets are exchanged — no text. Presence is best-effort soft state and is not persisted.
+Each connection's caret/selection position is relayed to the other devices as small JSON frames. The identity attached to a caret (a colour and a coarse `OS · Browser` label) is stamped by the server from the session, never taken from the client, and only character offsets are exchanged - no text. Presence is best-effort soft state and is not persisted.
 
 ## Transport
 

@@ -196,7 +196,7 @@ container as root against the same volume; `docker run --rm -v <volume>:/data al
 **`PASSWORD_HASH is not a valid scrypt$... string`.** The `$` characters were eaten (compose needs `$$`; a shell needs
 single quotes) or the value was cut. The hash has six `$`-separated parts and starts with `scrypt$`. Or use `PASSWORD_FILE`.
 
-**"Too many attempts — try again in N s".** Five wrong passwords from one IP within 15 minutes. The counter is
+**"Too many attempts - try again in N s".** Five wrong passwords from one IP within 15 minutes. The counter is
 persisted, so a restart does not reset it; wait it out, or change `LOGIN_MAX_FAILS`/`LOGIN_WINDOW_MIN`. Behind a
 proxy without `TRUST_PROXY=1` every visitor counts against the same IP.
 

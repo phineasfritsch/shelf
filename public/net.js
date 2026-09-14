@@ -55,7 +55,7 @@ export function clearLocalState() {
     }
     for (const k of keys) localStorage.removeItem(k);
   } catch {
-    // storage unavailable (private mode, blocked) — nothing to clear
+    // storage unavailable (private mode, blocked) - nothing to clear
   }
 }
 
@@ -71,12 +71,12 @@ export function createNet({ doc, isComposing = () => false } = {}) {
   let status = 'connecting';
   let limits = null;
   let peers = 0;
-  let identity = null;            // { cid, color, label } — this connection's presence identity (from 'hello')
+  let identity = null;            // { cid, color, label } - this connection's presence identity (from 'hello')
   let skew = 0;                   // serverNow - Date.now()
   let attempts = 0;               // consecutive failed/closed connections (drives backoff)
   let everClosed = false;         // 'connecting' is only shown before the first close
   let stopped = true;             // net.close() called / not yet connected
-  let loggedOut = false;          // 4001 handled — never reconnect, never persist again
+  let loggedOut = false;          // 4001 handled - never reconnect, never persist again
   let byeReason = null;           // reason from the last {t:'bye'} on this connection
   let lastFrameAt = 0;            // Date.now() of the last frame of any kind
   let pingSentAt = 0;             // Date.now() of the last ping we sent
@@ -160,7 +160,7 @@ export function createNet({ doc, isComposing = () => false } = {}) {
 
   // Publish this device's caret to the others. a/h are character offsets (a===h is a collapsed caret);
   // the caller is responsible for throttling (~80–120 ms) so this stays a small control frame, not a firehose.
-  // No-op until the socket is OPEN, which is fine — presence is soft state re-sent on the next caret move.
+  // No-op until the socket is OPEN, which is fine - presence is soft state re-sent on the next caret move.
   function sendPresence({ a = 0, h = a, typing = false } = {}) {
     const ai = Number.isInteger(a) && a >= 0 ? a : 0;
     const hi = Number.isInteger(h) && h >= 0 ? h : ai;

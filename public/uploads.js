@@ -1,11 +1,11 @@
 // Upload queue: XHR PUT /api/files with byte progress, concurrency 2, FIFO, cancel/retry,
-// client-side JPEG thumbnails for images. Pure model — no DOM. files-view.js renders `items`.
+// client-side JPEG thumbnails for images. Pure model - no DOM. files-view.js renders `items`.
 //
 //   const uploads = createUploads({ getLimits: () => net.limits, toast, onChange: () => view.render() });
 //   uploads.enqueue(fileList);            // from picker / camera / paste / drop / share inbox
 //   uploads.items                         // live array of queue items (see ITEM SHAPE below)
 //   uploads.cancel(id) / retry(id) / dismiss(id)
-//   uploads.reconcile(serverFiles)        // app.js: after every `files` message — drops done items the server now lists
+//   uploads.reconcile(serverFiles)        // app.js: after every `files` message - drops done items the server now lists
 //
 // ITEM SHAPE: { id, name, size, state: 'queued'|'uploading'|'done'|'error', loaded, total, rate, error, file, serverId }
 //   rate     bytes/s measured over a sliding ≥1 s window (0 until the first progress event)
@@ -199,7 +199,7 @@ export function createUploads({ getLimits, toast, onChange } = {}) {
         return;
       }
       if (status === 401) {
-        item.error = 'Logged out — reload';
+        item.error = 'Logged out - reload';
         item.state = 'error';
         notify();
         location.replace('/login');
@@ -236,7 +236,7 @@ export function createUploads({ getLimits, toast, onChange } = {}) {
   }
 
   function loggedOut(item) {
-    item.error = 'Logged out — reload';
+    item.error = 'Logged out - reload';
     item.state = 'error';
     notify();
     location.replace('/login');
@@ -256,7 +256,7 @@ export function createUploads({ getLimits, toast, onChange } = {}) {
         p.xhr = null;
         if (xhr.status === 204) return resolve();
         const fatal = [400, 401, 404, 413, 507].includes(xhr.status);
-        const msg = xhr.status === 401 ? 'Logged out — reload' : xhr.status === 404 ? 'Upload expired — retry' : `Upload failed (${xhr.status})`;
+        const msg = xhr.status === 401 ? 'Logged out - reload' : xhr.status === 404 ? 'Upload expired - retry' : `Upload failed (${xhr.status})`;
         if (xhr.status === 401) location.replace('/login');
         reject(Object.assign(new Error(msg), { fatal }));
       };

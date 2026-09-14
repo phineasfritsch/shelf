@@ -6,7 +6,7 @@
 // This module ONLY renders OTHER devices' carets, delivered as net 'presence' / 'presence-gone'
 // events. Sending this device's own caret is wired in app.js via net.sendPresence().
 //
-// It is PURELY ADDITIVE: it never reads or writes the textarea's value, selection, scroll, or focus —
+// It is PURELY ADDITIVE: it never reads or writes the textarea's value, selection, scroll, or focus -
 // it only reads geometry (value length, scrollTop/Left, clientWidth, getComputedStyle, getBoundingRect).
 // A <textarea> cannot style ranges, so offsets are turned into pixels with the classic mirror-div
 // technique (see the well-known textarea-caret-position approach): a hidden div is styled to wrap text
@@ -37,7 +37,7 @@ export function createPresence({ textarea: ta, net, typingHint = null } = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'presence-overlay';
   overlay.setAttribute('aria-hidden', 'true');
-  const host = ta.parentNode;                     // .box — made position:relative in app.css
+  const host = ta.parentNode;                     // .box - made position:relative in app.css
   if (host) host.insertBefore(overlay, ta.nextSibling);
 
   // ---- one reused, off-screen measurement mirror ----
@@ -99,7 +99,7 @@ export function createPresence({ textarea: ta, net, typingHint = null } = {}) {
     if (!host) return;
     const tr = ta.getBoundingClientRect();
     const hr = host.getBoundingClientRect();
-    // host (.box) has no border/padding, so its client rect origin is its padding-box origin — which is
+    // host (.box) has no border/padding, so its client rect origin is its padding-box origin - which is
     // what an absolutely-positioned child is offset from.
     overlay.style.left = (tr.left - hr.left) + 'px';
     overlay.style.top = (tr.top - hr.top) + 'px';
@@ -139,7 +139,7 @@ export function createPresence({ textarea: ta, net, typingHint = null } = {}) {
     for (const b of p.bands) b.style.background = p.color;
   }
 
-  // Show the label chip and (re)arm its fade — called on every update, so a chip that keeps moving stays lit.
+  // Show the label chip and (re)arm its fade - called on every update, so a chip that keeps moving stays lit.
   function showChip(p) {
     p.chip.classList.remove('presence-chip--hidden');
     if (p.chipTimer) clearTimeout(p.chipTimer);

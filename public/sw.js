@@ -1,9 +1,9 @@
-// Service worker — share target ONLY. It caches nothing: index.html, JS, CSS, /api/*, /ws and /f/* all go
+// Service worker - share target ONLY. It caches nothing: index.html, JS, CSS, /api/*, /ws and /f/* all go
 // straight to the network, so a deploy is picked up on the next load and the app never serves a stale client.
 //
 // Android/Chrome (installed PWA over HTTPS) POSTs the shared files/text as multipart to /share. We intercept
 // that request entirely on the client, park each part in the Cache API bucket 'share-inbox', and redirect to
-// the app, which drains the inbox on load (app.js drainInbox). The page — not the worker — performs the
+// the app, which drains the inbox on load (app.js drainInbox). The page - not the worker - performs the
 // upload, so this works even when the session had expired (the server 302s to /login, the user logs in,
 // / loads, the inbox drains). The server never parses multipart.
 

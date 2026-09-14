@@ -56,8 +56,8 @@ describe('doc sync', () => {
     await converged([a, b], 'hello from A');
 
     // and the other way, appending at the end
-    b.ytext.insert(b.ytext.length, ' — and B');
-    await converged([a, b], 'hello from A — and B');
+    b.ytext.insert(b.ytext.length, ' - and B');
+    await converged([a, b], 'hello from A - and B');
     await Promise.all([a.whenSaved(), b.whenSaved()]);
     assert.equal(a.unacked, 0);
     assert.equal(b.unacked, 0);

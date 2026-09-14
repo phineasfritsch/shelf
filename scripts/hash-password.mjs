@@ -1,4 +1,4 @@
-// Reads a password from stdin (never argv — argv shows up in `ps` and shell history) and prints the scrypt hash.
+// Reads a password from stdin (never argv - argv shows up in `ps` and shell history) and prints the scrypt hash.
 //   echo -n 'my password' | node scripts/hash-password.mjs
 //   docker run --rm -i shelf node scripts/hash-password.mjs   (then type the password and press Ctrl-D)
 // Use the printed value as PASSWORD_HASH (in compose, escape every $ as $$).

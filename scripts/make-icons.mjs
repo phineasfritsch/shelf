@@ -15,7 +15,7 @@ function render(n, pad, rounded) {
     const cx = Math.min(Math.max(x, r), n - r), cy = Math.min(Math.max(y, r), n - r);
     return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
   };
-  // Glyph: a tray (open box) with a downward arrow above it — "drop it on the shelf".
+  // Glyph: a tray (open box) with a downward arrow above it - "drop it on the shelf".
   const m = n * pad;                 // margin
   const w = n - 2 * m;               // usable width
   const t = Math.max(2, Math.round(w * 0.085)); // stroke

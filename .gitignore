@@ -19,4 +19,4 @@ npm-debug.log*
 Thumbs.db
 
 # NOTE: public/vendor/ (yjs.js, qrcode.js) and public/icons/ (PNGs) are generated once
-# by `npm run vendor` / `npm run icons` and ARE committed — the Docker image copies them verbatim.
+# by `npm run vendor` / `npm run icons` and ARE committed - the Docker image copies them verbatim.

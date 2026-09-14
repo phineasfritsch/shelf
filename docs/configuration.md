@@ -9,13 +9,13 @@ list in file form (`node --env-file=.env server.js`, or `env_file:` in compose).
 | `PORT` | `8080` | Listen port. |
 | `HOST` | `0.0.0.0` | Listen address. In Docker keep it on `0.0.0.0` or `127.0.0.1`, or the `HEALTHCHECK` cannot reach `/healthz`. |
 | `DATA_DIR` | `/data` | The single persistent directory: `shelf.db` (+ `-wal`, `-shm`), `files/`, `tmp/`, `text.txt`, and `password.hash` (generated password) or `password.salt` (plaintext `PASSWORD`). Must be a local filesystem (SQLite; not NFS/SMB) and writable by the process, or boot fails with `DATA_DIR … is not writable by uid <n>`. |
-| `PASSWORD_HASH` | — | Preferred. `scrypt$32768$8$1$<salt>$<key>` from `npm run -s hash-password`. |
-| `PASSWORD_FILE` | — | Path to a file (Docker/Compose secrets). Trimmed contents are a hash if they start with `scrypt$`, otherwise the plaintext password. |
-| `PASSWORD` | — | Plaintext convenience. Hashed in memory at boot (with a salt persisted at `DATA_DIR/password.salt` so restarts do not log devices out), then deleted from the environment; logs a warning. |
+| `PASSWORD_HASH` | - | Preferred. `scrypt$32768$8$1$<salt>$<key>` from `npm run -s hash-password`. |
+| `PASSWORD_FILE` | - | Path to a file (Docker/Compose secrets). Trimmed contents are a hash if they start with `scrypt$`, otherwise the plaintext password. |
+| `PASSWORD` | - | Plaintext convenience. Hashed in memory at boot (with a salt persisted at `DATA_DIR/password.salt` so restarts do not log devices out), then deleted from the environment; logs a warning. |
 | `SESSION_DAYS` | `365` | Sliding session lifetime. A device used at least once per period is never logged out. |
 | `COOKIE_SECURE` | `auto` | `auto` = the cookie gets `Secure` when the request is HTTPS (TLS socket, or first `X-Forwarded-Proto` value is `https`); `true` / `false` force it. |
 | `TRUST_PROXY` | `0` | `1` = trust `X-Forwarded-For` (rightmost entry = client IP) and `X-Forwarded-Host` from the proxy in front of Shelf. Does not affect `X-Forwarded-Proto`, which is always honoured (see [security.md](security.md)). Enable it **only** when the proxy is the sole way in: with the container port published directly, `1` lets any client spoof `X-Forwarded-For` and dodge the login limiter. |
-| `ALLOWED_ORIGINS` | — | Comma-separated full origins (`https://shelf.example.com`) accepted by the CSRF/WebSocket Origin check in addition to the request's own host. Only needed when a proxy rewrites `Host` and you cannot set `TRUST_PROXY=1`. |
+| `ALLOWED_ORIGINS` | - | Comma-separated full origins (`https://shelf.example.com`) accepted by the CSRF/WebSocket Origin check in addition to the request's own host. Only needed when a proxy rewrites `Host` and you cannot set `TRUST_PROXY=1`. |
 | `FILE_TTL_HOURS` | `168` | Default lifetime of an uploaded file (decimals allowed). `0` = never expire. *Keep* on a file exempts it. |
 | `MAX_FILE_MB` | `2048` | Per-file upload cap (HTTP 413). |
 | `MAX_STORAGE_MB` | `0` | Total cap for stored files (HTTP 507 `storage_full`). `0` = unlimited. |
@@ -74,5 +74,5 @@ Shelf stores everything in one SQLite database through Node's built-in `node:sql
 marked **experimental** in Node and needs **Node 24 or newer** (the app suppresses its experimental warning). The
 Docker image pins a known-good runtime (`node:26-alpine`), and CI runs the suite on Node 24 and 26 across Linux and
 Windows, so a normal deployment is insulated from the churn. If you run from source, stay on a Node version the CI
-matrix covers. Should a future Node change the `node:sqlite` API, the fix is a small adapter in `lib/db.js` — the rest
+matrix covers. Should a future Node change the `node:sqlite` API, the fix is a small adapter in `lib/db.js` - the rest
 of the code talks to a thin wrapper there, not to the module directly.

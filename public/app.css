@@ -1,4 +1,4 @@
-/* Shelf — mobile-first, single column, light/dark via prefers-color-scheme. Shared by index.html and login.html.
+/* Shelf - mobile-first, single column, light/dark via prefers-color-scheme. Shared by index.html and login.html.
    No inline styles anywhere (CSP style-src 'self'); JS only toggles classes / hidden and sets --vh. */
 
 /* ---------- tokens ---------- */
@@ -184,7 +184,7 @@ button { font: inherit; color: inherit; }
 /* Below 900px .main stays the single stacked column defined above (do not regress mobile). The header,
    menu, drop overlay and toasts are fixed/sticky OUTSIDE .main, so they remain full width. The presence
    overlay is a child of .box and tracks the textarea's border box, so it follows the textarea into the
-   left pane with no extra work — it re-syncs on the resize that switching layouts triggers. */
+   left pane with no extra work - it re-syncs on the resize that switching layouts triggers. */
 @media (min-width: 900px) {
   .main {
     max-width: 88rem;                    /* wide enough that a laptop has no giant side gutters */
