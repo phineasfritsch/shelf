@@ -270,3 +270,28 @@ describe('server-enforced text cap', () => {
     await Promise.all([a.closed, b.closed]);
   });
 });
+
+describe('persist failure is never acked (durability linchpin)', () => {
+  let t, cookie;
+  before(async () => { t = await startTestServer(); cookie = await t.login(); });
+  after(async () => { await t.stop(); });
+
+  const rows = () => t.app.db.prepare('SELECT COUNT(*) AS n FROM doc_updates').get().n;
+
+  test('an update whose disk write throws gets {error:persist_failed} + close 1011, no ack, and is not persisted', async () => {
+    const c = await t.connectSynced(cookie);
+    await c.whenSaved();                       // handshake settled
+    const before = rows();
+    const acksBefore = c.acks;
+    const errP = c.waitMessage('error');
+    t.app.doc.__failPersistOnce();             // next update's INSERT throws
+    c.ytext.insert(0, 'this must not be acked');
+    const err = await errP;
+    assert.equal(err.reason, 'persist_failed');
+    const { code } = await c.closed;           // server closes 1011
+    assert.equal(code, 1011);
+    assert.equal(c.acks, acksBefore, 'no ack for the un-persisted update');
+    assert.equal(t.app.doc.persistFailures, 1);
+    assert.equal(rows(), before, 'nothing was written to doc_updates');
+  });
+});

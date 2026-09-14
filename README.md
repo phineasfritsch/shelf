@@ -95,6 +95,13 @@ With nothing configured, the first boot **generates a password and prints it onc
 lines) and stores only its hash. Open `http://<host>:8080`, log in, and you are done. To set your own password or
 change other settings, see [docs/configuration.md](docs/configuration.md).
 
+Once a release is published, you can skip the clone and the build and run the prebuilt image directly:
+
+```bash
+docker run -d --name shelf -p 8080:8080 -v shelf-data:/data -e PASSWORD=change-me \
+  ghcr.io/phineasfritsch/file_mover:latest
+```
+
 > **Just want to try it without Docker?** With Node 24+: `npm ci && PASSWORD=test DATA_DIR=./data npm start`, then
 > open <http://localhost:8080>. Nothing native compiles — it uses Node's built-in SQLite.
 

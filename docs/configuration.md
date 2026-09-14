@@ -67,3 +67,12 @@ Changing the password (new hash, new file, new `PASSWORD`) logs every device out
 ```
 
 Only one process may use a `DATA_DIR` at a time. Never point two instances at the same directory or volume.
+
+## A note on the storage engine
+
+Shelf stores everything in one SQLite database through Node's built-in `node:sqlite` module. That module is still
+marked **experimental** in Node and needs **Node 24 or newer** (the app suppresses its experimental warning). The
+Docker image pins a known-good runtime (`node:26-alpine`), and CI runs the suite on Node 24 and 26 across Linux and
+Windows, so a normal deployment is insulated from the churn. If you run from source, stay on a Node version the CI
+matrix covers. Should a future Node change the `node:sqlite` API, the fix is a small adapter in `lib/db.js` — the rest
+of the code talks to a thin wrapper there, not to the module directly.

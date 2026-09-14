@@ -6,7 +6,7 @@ Single-user, self-hosted "one text box + expiring attachments" that stays live a
 
 ## 1. Decision summary
 
-**Stack:** Node 26 (ESM, `"type":"module"`), `node:http` + `ws@8.18.3` for the WebSocket server, `node:sqlite` (`DatabaseSync`, WAL) for all metadata and the document log, `yjs@13.6.27` as the text CRDT on both server and browser, `node:crypto` scrypt for the password. No framework, no TypeScript, no bundler in the run or deploy path. The browser gets hand-written ESM modules served as-is plus one vendored `public/vendor/yjs.js` (produced once by `npm run vendor`, committed to the repo). Image: single-stage `node:26-alpine`, ~65 MB, cold start < 300 ms.
+**Stack:** Node 24+ (ESM, `"type":"module"`; the image uses Node 26), `node:http` + `ws@8.21.3` for the WebSocket server, `node:sqlite` (`DatabaseSync`, WAL) for all metadata and the document log, `yjs@13.6.32` as the text CRDT on both server and browser, `node:crypto` scrypt for the password. No framework, no TypeScript, no bundler in the run or deploy path. The browser gets hand-written ESM modules served as-is plus one vendored `public/vendor/yjs.js` (produced once by `npm run vendor`, committed to the repo). Image: single-stage `node:26-alpine`, ~65 MB, cold start < 300 ms.
 
 **The five decisions that matter, and why:**
 
