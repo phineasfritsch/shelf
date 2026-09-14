@@ -1,6 +1,6 @@
 {
   "name": "shelfy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "One live text box + expiring file attachments, shared between your phone and your computer. Single container, single volume, password-protected.",
   "type": "module",
   "private": true,

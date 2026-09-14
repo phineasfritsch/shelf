@@ -3,6 +3,13 @@
 All notable changes to Shelfy are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [semantic versioning](https://semver.org/).
 
+## [1.0.1] - 2026-09-14
+
+### Changed
+- Renamed the project to **Shelfy** (brand, package, image, and repository URLs). Internal storage identifiers are
+  unchanged, so existing data directories keep working.
+- Replaced the README media with a full-resolution demo GIF and a crisp screenshot; removed em dashes throughout.
+
 ## [1.0.0] - 2026-09-14
 
 First public release.
@@ -32,4 +39,5 @@ First public release.
   jointly overshoot the cap.
 - The public `/healthz` probe returns only `{ok, draining}` and no longer discloses file or client counts.
 
+[1.0.1]: https://github.com/phineasfritsch/shelfy/releases/tag/v1.0.1
 [1.0.0]: https://github.com/phineasfritsch/shelfy/releases/tag/v1.0.0
