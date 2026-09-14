@@ -15,7 +15,8 @@ const TAG_SV = 0x00;
 const TAG_UPDATE = 0x01;
 const PING_MS = 20000;          // client heartbeat while visible
 const DEAD_MS = 30000;          // no frame after a ping for this long -> drop and reconnect
-const WATCH_MS = 5000;          // how often the dead-socket check runs
+const WAKE_DEAD_MS = 4000;      // after a wake-up probe: a half-open socket is torn down this fast
+const WATCH_MS = 2000;          // how often the dead-socket check runs
 const BACKOFF_MIN_MS = 500;
 const BACKOFF_MAX_MS = 10000;
 const PERSIST_MS = 300;         // localStorage debounce
@@ -78,6 +79,7 @@ export function createNet({ doc, isComposing = () => false } = {}) {
   let byeReason = null;           // reason from the last {t:'bye'} on this connection
   let lastFrameAt = 0;            // Date.now() of the last frame of any kind
   let pingSentAt = 0;             // Date.now() of the last ping we sent
+  let deadAfter = DEAD_MS;        // how long the current outstanding ping may go unanswered
   let reconnectTimer = null, pingTimer = null, watchTimer = null, persistTimer = null;
 
   // ---- events ----
@@ -279,14 +281,15 @@ export function createNet({ doc, isComposing = () => false } = {}) {
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
       if (document.visibilityState !== 'visible') return;
       pingSentAt = Date.now();
+      deadAfter = DEAD_MS;
       sendJson({ t: 'ping' });
     }, PING_MS);
     // Dead-socket detection: we sent a ping and nothing at all came back for DEAD_MS. Pings only go
     // out while visible, so a hidden tab is never torn down for being quiet.
     watchTimer = setInterval(() => {
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
-      if (pingSentAt > lastFrameAt && Date.now() - pingSentAt > DEAD_MS) {
-        console.warn('net: no frames for 30 s, reconnecting');
+      if (pingSentAt > lastFrameAt && Date.now() - pingSentAt > deadAfter) {
+        console.warn(`net: no reply to ping for ${Math.round(deadAfter / 1000)} s, reconnecting`);
         dropSocket(ws, 1006);
       }
     }, WATCH_MS);
@@ -394,8 +397,11 @@ export function createNet({ doc, isComposing = () => false } = {}) {
     if (loggedOut || stopped) return;
     if (ws && ws.readyState === WebSocket.OPEN) {
       if (document.visibilityState === 'visible') {
-        lastFrameAt = Date.now();      // measure liveness from now, not from before the tab slept
+        // Probe a possibly half-open socket (phone slept): measure from now, and give it only a few seconds.
+        // pingSentAt must be strictly later than lastFrameAt or the watch above would never consider it outstanding.
+        lastFrameAt = Date.now() - 1;
         pingSentAt = Date.now();
+        deadAfter = WAKE_DEAD_MS;
         sendJson({ t: 'ping' });
       }
       return;

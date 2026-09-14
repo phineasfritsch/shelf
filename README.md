@@ -85,7 +85,7 @@ All are read once at boot by `lib/config.js`; the effective configuration is log
 | `PASSWORD` | — | Plaintext convenience. Hashed in memory at boot, then deleted from the environment; logs a warning. |
 | `SESSION_DAYS` | `365` | Sliding session lifetime. A device used at least once per period is never logged out. |
 | `COOKIE_SECURE` | `auto` | `auto` = the cookie gets `Secure` when the request is HTTPS (TLS socket, or first `X-Forwarded-Proto` value is `https`); `true` / `false` force it. |
-| `TRUST_PROXY` | `0` | `1` = trust `X-Forwarded-For` (rightmost entry = client IP) and `X-Forwarded-Host` from the proxy in front of Shelf. Does not affect `X-Forwarded-Proto`, which is always honoured (see *Security model*). |
+| `TRUST_PROXY` | `0` | `1` = trust `X-Forwarded-For` (rightmost entry = client IP) and `X-Forwarded-Host` from the proxy in front of Shelf. Does not affect `X-Forwarded-Proto`, which is always honoured (see *Security model*). Enable it **only** when the proxy is the sole way in: with the container port published directly, `1` lets any client spoof `X-Forwarded-For` and dodge the login limiter. |
 | `ALLOWED_ORIGINS` | — | Comma-separated full origins (`https://shelf.example.com`) accepted by the CSRF/WebSocket Origin check in addition to the request's own host. Only needed when a proxy rewrites `Host` and you cannot set `TRUST_PROXY=1`. |
 | `FILE_TTL_HOURS` | `168` | Default lifetime of an uploaded file (decimals allowed). `0` = never expire. *Keep* on a file exempts it. |
 | `MAX_FILE_MB` | `2048` | Per-file upload cap (HTTP 413). Your proxy must allow request bodies this large. |
