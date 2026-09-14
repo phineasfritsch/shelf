@@ -15,7 +15,7 @@ Thanks for looking. Shelf is deliberately small; the best contributions keep it 
 ## Getting started
 
 ```bash
-git clone https://github.com/phineasfritsch/file_mover.git shelf && cd shelf
+git clone https://github.com/phineasfritsch/shelf.git && cd shelf
 npm ci
 PASSWORD=test DATA_DIR=./data npm start        # http://localhost:8080
 npm test

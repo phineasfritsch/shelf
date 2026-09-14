@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Question or help
-    url: https://github.com/phineasfritsch/file_mover/discussions
+    url: https://github.com/phineasfritsch/shelf/discussions
     about: Ask in Discussions rather than opening an issue.
   - name: Security vulnerability
-    url: https://github.com/phineasfritsch/file_mover/security/advisories/new
+    url: https://github.com/phineasfritsch/shelf/security/advisories/new
     about: Report privately. Please do not open a public issue for security bugs (see SECURITY.md).

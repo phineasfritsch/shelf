@@ -32,4 +32,4 @@ First public release.
   jointly overshoot the cap.
 - The public `/healthz` probe returns only `{ok, draining}` and no longer discloses file or client counts.
 
-[1.0.0]: https://github.com/phineasfritsch/file_mover/releases/tag/v1.0.0
+[1.0.0]: https://github.com/phineasfritsch/shelf/releases/tag/v1.0.0

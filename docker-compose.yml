@@ -12,7 +12,7 @@
 services:
   shelf:
     # Build from source (this checkout). To run a prebuilt image instead, comment out `build:` and use the
-    # published image — no clone needed:  image: ghcr.io/phineasfritsch/file_mover:latest
+    # published image — no clone needed:  image: ghcr.io/phineasfritsch/shelf:latest
     build: .
     image: shelf:latest
     restart: unless-stopped

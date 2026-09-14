@@ -9,7 +9,7 @@
 Type on either device and it is on the other within a round trip. Drop, paste, or photograph a file and it is
 everywhere, with a thumbnail. Everything behind one password. One container, one volume, no accounts, no cloud.
 
-[![CI](https://github.com/phineasfritsch/file_mover/actions/workflows/ci.yml/badge.svg)](https://github.com/phineasfritsch/file_mover/actions/workflows/ci.yml)
+[![CI](https://github.com/phineasfritsch/shelf/actions/workflows/ci.yml/badge.svg)](https://github.com/phineasfritsch/shelf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A524-brightgreen.svg)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-2-brightgreen.svg)
@@ -86,7 +86,7 @@ always-on scratchpad plus a drop box that both your phone and your laptop share 
 You need [Docker](https://docs.docker.com/get-docker/). That is the only requirement.
 
 ```bash
-git clone https://github.com/phineasfritsch/file_mover.git shelf && cd shelf
+git clone https://github.com/phineasfritsch/shelf.git && cd shelf
 docker compose up -d --build
 docker compose logs -f shelf
 ```
@@ -99,7 +99,7 @@ Once a release is published, you can skip the clone and the build and run the pr
 
 ```bash
 docker run -d --name shelf -p 8080:8080 -v shelf-data:/data -e PASSWORD=change-me \
-  ghcr.io/phineasfritsch/file_mover:latest
+  ghcr.io/phineasfritsch/shelf:latest
 ```
 
 > **Just want to try it without Docker?** With Node 24+: `npm ci && PASSWORD=test DATA_DIR=./data npm start`, then
