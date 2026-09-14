@@ -1,0 +1,18 @@
+# Keep the build context small; the image needs only package*.json, server.js, lib/, public/, scripts/.
+node_modules
+.git
+.gitattributes
+.gitignore
+data
+.tmp-data*
+test
+docs
+*.md
+*.log
+.env*
+docker-compose.yml
+Dockerfile
+.dockerignore
+.vscode
+.idea
+.claude

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Log in · Shelf</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Shelf">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="/app.css">
+<script src="/login.js" defer></script>
+</head>
+<body class="login-page">
+
+<main class="login-wrap">
+  <form id="login" class="login-card" method="post" action="/api/login" novalidate>
+    <div class="login-brand">
+      <img class="login-logo" src="/icons/icon.svg" alt="" width="40" height="40">
+      <h1 class="login-title">Shelf</h1>
+    </div>
+
+    <label class="label" for="password">Password</label>
+    <div class="pw-wrap">
+      <input id="password" class="input" type="password" name="password" autocomplete="current-password" autofocus required enterkeyhint="go" aria-describedby="login-error" placeholder="Password">
+      <button id="toggle-pw" class="btn btn--ghost" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+    </div>
+
+    <p id="login-error" class="form-error" role="alert" aria-live="assertive" hidden></p>
+    <p id="link-status" class="form-note" role="status" aria-live="polite" hidden></p>
+
+    <button id="login-submit" class="btn btn--primary btn--block" type="submit">Log in</button>
+  </form>
+</main>
+
+</body>
+</html>

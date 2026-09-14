@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shelf</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Shelf">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="/app.css">
+<script type="module" src="/app.js"></script>
+</head>
+<body class="app">
+
+<header class="hdr">
+  <h1 class="hdr-name">Shelf</h1>
+  <div class="hdr-status">
+    <span id="status" class="pill pill--connecting">
+      <span class="pill-dot" aria-hidden="true"></span>
+      <span id="status-text" class="pill-text">Connecting…</span>
+    </span>
+    <span id="peers" class="peers" hidden></span>
+  </div>
+  <button id="menu-btn" class="icon-btn" type="button" aria-label="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menu">⋯</button>
+</header>
+
+<div id="menu" class="menu" role="menu" aria-label="Shelf menu" hidden>
+  <button class="menu-item" type="button" role="menuitem" data-action="history">History</button>
+  <button class="menu-item" type="button" role="menuitem" data-action="devices">Devices</button>
+  <button class="menu-item" type="button" role="menuitem" data-action="link">Link a phone</button>
+  <button class="menu-item" type="button" role="menuitem" data-action="storage">
+    <span>Storage used</span>
+    <span id="menu-storage" class="menu-sub"></span>
+  </button>
+  <div class="menu-sep" role="separator"></div>
+  <button class="menu-item" type="button" role="menuitem" data-action="logout">Log out</button>
+  <button class="menu-item menu-item--danger" type="button" role="menuitem" data-action="logout-all">Log out everywhere</button>
+</div>
+
+<main class="main">
+  <section class="box" aria-label="Shared text">
+    <textarea id="t" placeholder="Type or paste on any device…" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Shared text"></textarea>
+    <div class="toolbar">
+      <button id="copy-btn" class="btn" type="button">Copy all</button>
+      <button id="paste-btn" class="btn" type="button" hidden>Paste</button>
+      <button id="clear-btn" class="btn" type="button">Clear</button>
+      <span id="count" class="count" title="Characters">0</span>
+    </div>
+    <div id="chips" class="chips" aria-label="Links found in the text" hidden></div>
+  </section>
+
+  <section class="files" aria-labelledby="files-title">
+    <div class="files-head">
+      <h2 id="files-title" class="files-title">Files</h2>
+      <div class="files-actions">
+        <button id="add-btn" class="btn btn--primary" type="button">Add files</button>
+        <button id="camera-btn" class="btn" type="button">Camera</button>
+      </div>
+      <p class="hint">or paste / drop anywhere</p>
+    </div>
+    <input id="file-input" class="visually-hidden" type="file" multiple tabindex="-1" aria-hidden="true">
+    <input id="camera-input" class="visually-hidden" type="file" accept="image/*,video/*" capture="environment" tabindex="-1" aria-hidden="true">
+    <div id="files-grid" class="files-grid"></div>
+  </section>
+</main>
+
+<div id="drop" class="drop" aria-hidden="true" hidden>
+  <div class="drop-inner">Drop files to upload</div>
+</div>
+
+<span id="status-live" class="sr-only" role="status" aria-live="polite"></span>
+<div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+<dialog id="sheet-history" class="sheet" aria-labelledby="sheet-history-title">
+  <div class="sheet-head">
+    <h2 id="sheet-history-title" class="sheet-title">History</h2>
+    <button class="icon-btn sheet-close" type="button" aria-label="Close">×</button>
+  </div>
+  <div id="history-body" class="sheet-body"></div>
+</dialog>
+
+<dialog id="sheet-devices" class="sheet" aria-labelledby="sheet-devices-title">
+  <div class="sheet-head">
+    <h2 id="sheet-devices-title" class="sheet-title">Devices</h2>
+    <button class="icon-btn sheet-close" type="button" aria-label="Close">×</button>
+  </div>
+  <div id="devices-body" class="sheet-body"></div>
+</dialog>
+
+<dialog id="sheet-link" class="sheet" aria-labelledby="sheet-link-title">
+  <div class="sheet-head">
+    <h2 id="sheet-link-title" class="sheet-title">Link a phone</h2>
+    <button class="icon-btn sheet-close" type="button" aria-label="Close">×</button>
+  </div>
+  <div id="link-body" class="sheet-body"></div>
+</dialog>
+
+<dialog id="sheet-storage" class="sheet" aria-labelledby="sheet-storage-title">
+  <div class="sheet-head">
+    <h2 id="sheet-storage-title" class="sheet-title">Storage</h2>
+    <button class="icon-btn sheet-close" type="button" aria-label="Close">×</button>
+  </div>
+  <div id="storage-body" class="sheet-body"></div>
+</dialog>
+
+</body>
+</html>

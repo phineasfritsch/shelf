@@ -1,0 +1,28 @@
+{
+  "name": "shelf",
+  "version": "1.0.0",
+  "description": "One live text box + expiring file attachments, shared between your phone and your computer. Single container, single volume, password-protected.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test --test-timeout=60000 \"test/*.test.js\"",
+    "vendor": "node scripts/vendor.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "hash-password": "node scripts/hash-password.mjs"
+  },
+  "dependencies": {
+    "ws": "8.21.3",
+    "yjs": "13.6.32"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "qrcode-generator": "2.0.4"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

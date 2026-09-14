@@ -1,0 +1,60 @@
+# Shelf — example deployment. One container, one named volume.
+#
+#   docker compose up -d --build
+#   docker compose logs -f           # first boot prints a generated password if none is configured
+#
+# Choose your own password:
+#   docker compose build
+#   docker run --rm -i shelf node scripts/hash-password.mjs     # type it, Enter, Ctrl-D
+# and paste the printed scrypt$... string below, writing every "$" as "$$"
+# (Compose interpolates "$"; "$$" is a literal dollar sign).
+
+services:
+  shelf:
+    build: .
+    image: shelf:latest
+    restart: unless-stopped
+    init: true                      # PID 1 reaps zombies and forwards SIGTERM to node
+    stop_grace_period: 30s          # > SHUTDOWN_TIMEOUT_SEC (20) + 5 s hard-exit margin in server.js
+    ports:
+      - "8080:8080"                 # remove when only the proxy network reaches it
+    environment:
+      # PASSWORD_HASH: "scrypt$32768$8$1$<salt>$<key>"   # paste your real hash here ($ escapes $ in compose).
+      #                                                      # Leave unset on first boot → a password is generated and printed in the logs.
+      # PASSWORD_FILE: /run/secrets/shelf_password         # alternative: a hash or plaintext, no escaping needed
+      FILE_TTL_HOURS: "168"         # files expire after 7 days unless kept; "0" = never
+      MAX_FILE_MB: "2048"           # per-file cap (HTTP 413 above it)
+      TRUST_PROXY: "0"              # set "1" ONLY when a reverse proxy is the sole way in (and remove the ports: line);
+                                    # with the port published, "1" lets clients spoof X-Forwarded-For past the login limiter
+      # COOKIE_SECURE: "auto"       # default; force "true" on known-HTTPS deployments
+      # MAX_STORAGE_MB: "0"         # total cap for uploaded files (HTTP 507 when full); "0" = unlimited
+      # LOG_JSON: "1"               # JSON lines instead of text
+    volumes:
+      - shelf-data:/data
+      # Bind mount instead (the container runs as uid 1000 — `chown -R 1000:1000 ./data` first):
+      # - ./data:/data
+    # user: "1000:1000"             # or match the host owner of a bind-mounted ./data
+    # secrets: [shelf_password]     # with PASSWORD_FILE above
+    # --- Caddy via lucaslorentz/caddy-docker-proxy (uncomment) ---
+    # networks: [caddy]
+    # labels:
+    #   caddy: shelf.example.com
+    #   caddy.reverse_proxy: "{{upstreams 8080}}"
+    # --- Traefik (uncomment; WebSockets and X-Forwarded-* work with the defaults) ---
+    # labels:
+    #   traefik.enable: "true"
+    #   traefik.http.routers.shelf.rule: "Host(`shelf.example.com`)"
+    #   traefik.http.routers.shelf.entrypoints: "websecure"
+    #   traefik.http.routers.shelf.tls.certresolver: "letsencrypt"
+    #   traefik.http.services.shelf.loadbalancer.server.port: "8080"
+
+volumes:
+  shelf-data:
+
+# secrets:
+#   shelf_password:
+#     file: ./shelf_password.txt    # contains either a scrypt$... hash or the plaintext password
+
+# networks:
+#   caddy:
+#     external: true

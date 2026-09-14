@@ -1,0 +1,22 @@
+# Dependencies (npm ci restores them from package-lock.json)
+node_modules/
+
+# Runtime data: SQLite, uploads, text mirror, generated password hash
+data/
+.tmp-data*/
+
+# Local secrets / config
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+
+# NOTE: public/vendor/ (yjs.js, qrcode.js) and public/icons/ (PNGs) are generated once
+# by `npm run vendor` / `npm run icons` and ARE committed — the Docker image copies them verbatim.
