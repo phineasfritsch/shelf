@@ -1,0 +1,47 @@
+name: Bug report
+description: Something does not behave as documented
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Commit hash, tag, or `docker images shelf` digest
+    validations:
+      required: true
+  - type: dropdown
+    id: deploy
+    attributes:
+      label: How is it deployed?
+      options:
+        - docker compose, plain http on the LAN
+        - docker compose + Cloudflare Tunnel (docker-compose.tunnel.yml)
+        - docker compose behind Caddy / Traefik / nginx
+        - node server.js directly
+        - other (say below)
+    validations:
+      required: true
+  - type: input
+    id: devices
+    attributes:
+      label: Devices and browsers involved
+      placeholder: iPhone 15 Safari + Windows 11 Chrome 130
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered. Say which device does what.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected vs. what happened
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log around the problem
+      description: "`docker compose logs --tail 100 shelf`. Passwords and tokens are never logged, but check anyway."
+      render: text
