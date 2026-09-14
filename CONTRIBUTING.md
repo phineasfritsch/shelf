@@ -37,6 +37,7 @@ Open the app in a normal window and a private window (two sessions = two "device
 | `lib/files.js`, `lib/routes-files.js`, `lib/routes-uploads.js` | file metadata, TTL sweeper, streaming and chunked uploads, downloads |
 | `public/` | the browser code, served verbatim. `vendor/` and `icons/` are generated (`npm run vendor`, `npm run icons`) and committed |
 | `public/textdiff.js` | the two pure functions that keep the caret still; unit-tested under node |
+| `public/presence.js` | remote-caret / selection overlay for live presence |
 | `test/` | `node --test` suites; `helpers.js` boots a real server on port 0 |
 | `docs/` | design spec, module contracts, deployment, configuration, security |
 

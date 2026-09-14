@@ -71,6 +71,7 @@ export function createNet({ doc, isComposing = () => false } = {}) {
   let status = 'connecting';
   let limits = null;
   let peers = 0;
+  let identity = null;            // { cid, color, label } — this connection's presence identity (from 'hello')
   let skew = 0;                   // serverNow - Date.now()
   let attempts = 0;               // consecutive failed/closed connections (drives backoff)
   let everClosed = false;         // 'connecting' is only shown before the first close
@@ -157,6 +158,15 @@ export function createNet({ doc, isComposing = () => false } = {}) {
     try { ws.send(JSON.stringify(obj)); return true; } catch (err) { console.warn('net: send failed', err); return false; }
   }
 
+  // Publish this device's caret to the others. a/h are character offsets (a===h is a collapsed caret);
+  // the caller is responsible for throttling (~80–120 ms) so this stays a small control frame, not a firehose.
+  // No-op until the socket is OPEN, which is fine — presence is soft state re-sent on the next caret move.
+  function sendPresence({ a = 0, h = a, typing = false } = {}) {
+    const ai = Number.isInteger(a) && a >= 0 ? a : 0;
+    const hi = Number.isInteger(h) && h >= 0 ? h : ai;
+    return sendJson({ t: 'presence', a: ai, h: hi, typing: !!typing });
+  }
+
   // Every local transaction goes out as one 0x01 frame, no debounce. Updates from the server
   // ('remote') and from localStorage ('load') are never echoed back; the handshake's
   // encodeStateAsUpdate(doc, serverSV) covers anything produced before sentStep2.
@@ -227,8 +237,16 @@ export function createNet({ doc, isComposing = () => false } = {}) {
         if (typeof msg.now === 'number') skew = msg.now - Date.now();
         if (msg.limits && typeof msg.limits === 'object') limits = msg.limits;
         if (typeof msg.peers === 'number') peers = msg.peers;
+        // This connection's presence identity: colour + label are chosen by the server, never invented here.
+        if (Number.isInteger(msg.cid)) {
+          identity = {
+            cid: msg.cid,
+            color: typeof msg.color === 'string' ? msg.color : '#888',
+            label: typeof msg.label === 'string' ? msg.label : 'A device',
+          };
+        }
         attempts = 0;             // the server is really talking to us: reset backoff
-        emit('hello', { proto: msg.proto, now: msg.now, limits, peers });
+        emit('hello', { proto: msg.proto, now: msg.now, limits, peers, identity });
         break;
       }
       case 'synced':
@@ -246,6 +264,24 @@ export function createNet({ doc, isComposing = () => false } = {}) {
       case 'peers':
         peers = typeof msg.n === 'number' ? msg.n : peers;
         emit('peers', { n: peers });
+        break;
+      case 'presence': {
+        // Another device's caret/selection. The server stamps cid/color/label and only relays OTHER
+        // connections' carets (never echoes ours), so we surface these straight to the presence overlay.
+        if (!Number.isInteger(msg.cid)) break;
+        const a = Number.isInteger(msg.a) && msg.a >= 0 ? msg.a : 0;
+        const h = Number.isInteger(msg.h) && msg.h >= 0 ? msg.h : a;
+        emit('presence', {
+          cid: msg.cid,
+          color: typeof msg.color === 'string' ? msg.color : '#888',
+          label: typeof msg.label === 'string' ? msg.label : 'A device',
+          a, h,
+          typing: msg.typing === true,
+        });
+        break;
+      }
+      case 'presence-gone':
+        if (Number.isInteger(msg.cid)) emit('presence-gone', { cid: msg.cid });
         break;
       case 'pong':
         break;                     // lastFrameAt was already refreshed
@@ -425,10 +461,12 @@ export function createNet({ doc, isComposing = () => false } = {}) {
     on,
     restoreLocal,
     flushPending,
+    sendPresence,
     serverNow: () => Date.now() + skew,
     get status() { return status; },
     get limits() { return limits; },
     get peers() { return peers; },
+    get identity() { return identity; },
     get connected() { return !!ws && ws.readyState === WebSocket.OPEN; },
     get synced() { return synced; },
     get unacked() { return unacked; },

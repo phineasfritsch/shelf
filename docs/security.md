@@ -91,6 +91,10 @@ and `Cache-Control: no-store` on HTML and `/api/*`.
 - The Android share target is handled entirely client-side. Because any web page can POST to `/share`, shared
   items are *staged* and the user confirms with one tap before anything is added to the shelf.
 
+## Presence
+
+Each connection's caret/selection position is relayed to the other devices as small JSON frames. The identity attached to a caret (a colour and a coarse `OS · Browser` label) is stamped by the server from the session, never taken from the client, and only character offsets are exchanged — no text. Presence is best-effort soft state and is not persisted.
+
 ## Transport
 
 Shelf does not do TLS itself. On plain `http://` the password and the cookie cross the network in clear: fine on a

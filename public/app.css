@@ -162,7 +162,7 @@ button { font: inherit; color: inherit; }
   padding: 12px 16px 24px;
   display: flex; flex-direction: column; gap: 20px;
 }
-.box { display: flex; flex-direction: column; gap: 10px; }
+.box { display: flex; flex-direction: column; gap: 10px; position: relative; } /* positioned parent for the presence overlay */
 #t {
   display: block; width: 100%;
   height: calc(var(--vh) * 0.5);          /* touch: half the visible viewport, scrolls inside */
@@ -179,6 +179,56 @@ button { font: inherit; color: inherit; }
 @media (hover: hover) and (pointer: fine) {
   #t { height: auto; min-height: 50vh; resize: vertical; }
 }
+
+/* ---------- desktop two-pane (>=900px): shared text left, files right ---------- */
+/* Below 900px .main stays the single stacked column defined above (do not regress mobile). The header,
+   menu, drop overlay and toasts are fixed/sticky OUTSIDE .main, so they remain full width. The presence
+   overlay is a child of .box and tracks the textarea's border box, so it follows the textarea into the
+   left pane with no extra work — it re-syncs on the resize that switching layouts triggers. */
+@media (min-width: 900px) {
+  .main {
+    max-width: 88rem;                    /* wide enough that a laptop has no giant side gutters */
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);   /* text flexible · files ~360–400px */
+    align-items: start;
+    gap: 24px;
+  }
+  /* The files pane is ~360–400px wide, so pack two columns of cards into it instead of one. */
+  .files .f-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+}
+
+/* ---------- live presence overlay (remote carets) ---------- */
+/* Sits exactly over the textarea's border box; JS sets its box + every child's position via el.style.
+   Purely visual: pointer-events:none so it never intercepts typing, aria-hidden so it's silent to AT. */
+.presence-overlay {
+  position: absolute; z-index: 2; pointer-events: none; overflow: hidden;
+  border-radius: var(--radius);
+}
+/* Off-screen twin of the textarea, used only to measure caret coordinates. position:fixed keeps a tall
+   mirror (a large document) from ever extending the page's scrollable area; the marker span's
+   offsetParent is still the mirror, so measured offsets are unchanged. */
+.presence-mirror {
+  position: fixed; top: 0; left: -9999px; visibility: hidden; pointer-events: none;
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal;
+}
+.presence-caret { position: absolute; width: 2px; border-radius: 1px; will-change: left, top; }
+.presence-band { position: absolute; border-radius: 2px; opacity: 0.22; }
+.presence-chip {
+  position: absolute; max-width: 160px; padding: 1px 6px; border-radius: 6px;
+  font-size: 11px; line-height: 1.45; font-weight: 600; color: #fff; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transform: translateY(calc(-100% - 3px));       /* lift above the caret's top */
+  transition: opacity 0.4s ease;
+}
+.presence-chip--below { transform: none; }         /* caret near the top edge: sit just below it instead */
+.presence-chip--hidden { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .presence-chip { transition: none; } }
+
+/* "typing…" hint next to the peers badge. */
+.typing-hint { font-size: 12px; font-style: italic; color: var(--fg-muted); white-space: nowrap; opacity: 0; transition: opacity 0.25s ease; }
+.typing-hint--on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .typing-hint { transition: none; } }
 
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .count { margin-left: auto; font-size: 12px; color: var(--fg-muted); font-variant-numeric: tabular-nums; padding: 0 4px; }
@@ -219,7 +269,11 @@ button { font: inherit; color: inherit; }
   padding: 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elev);
   transition: opacity 0.15s ease;
 }
-.f-card--deleting { opacity: 0.45; }
+/* Deleting: dim the file's own content (thumb / name / meta) but keep the undo row crisp and readable. */
+.f-card--deleting { border-color: var(--red); }
+.f-card--deleting > .f-thumb,
+.f-card--deleting > .f-name,
+.f-card--deleting > .f-meta { opacity: 0.4; }
 .f-card--kept { border-color: var(--green); }
 .f-thumb, .u-thumb {
   position: relative; display: flex; align-items: center; justify-content: center;
@@ -255,6 +309,20 @@ button { font: inherit; color: inherit; }
 @media (hover: hover) and (pointer: fine) {
   .f-btn { min-height: 34px; }             /* mouse: compact rows; touch keeps 44 px targets */
 }
+
+/* Delete-undo: replaces the action row while a delete is pending (so it never overlaps the buttons the
+   user just tapped), with a live countdown and a big Undo target. The whole greyed card is clickable to
+   undo too (wired in files-view.js). */
+.f-undo { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
+.f-undo-row { display: flex; align-items: center; gap: 8px; }
+.f-undo-text {
+  flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12px; font-weight: 600; color: var(--fg-muted); font-variant-numeric: tabular-nums;
+}
+.f-undo-btn { flex: 0 0 auto; color: var(--accent); border-color: var(--accent); font-weight: 700; }
+.f-undo-track { width: 100%; height: 4px; border-radius: 2px; background: var(--bg-sunken); overflow: hidden; }
+.f-undo-fill { height: 100%; width: 100%; background: var(--red); border-radius: 2px; transition: width 0.25s linear; }
+@media (prefers-reduced-motion: reduce) { .f-undo-fill { transition: none; } }
 
 /* ---------- drop overlay ---------- */
 .drop {

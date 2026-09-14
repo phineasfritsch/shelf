@@ -70,3 +70,25 @@ describe('chunked uploads', () => {
     assert.equal((await complete(sess.id)).status, 201);
   });
 });
+
+describe('storage cap is shared across upload paths', () => {
+  let t, cookie;
+  // cap ~2 chunks; MAX_FILE_MB big enough that a single file is not the limit
+  before(async () => { t = await startTestServer({ uploadChunkBytes: CHUNK, MAX_STORAGE_MB: '0.002', MAX_FILE_MB: '1' }); cookie = await t.login(); });
+  after(async () => { await t.stop(); });
+
+  test('a chunked reservation makes a concurrent raw PUT hit the cap', async () => {
+    const capBytes = Math.round(0.002 * 1024 * 1024); // ~2097
+    // Open a chunked session reserving most of the cap...
+    const r = await t.fetch('/api/uploads', { method: 'POST', cookie, headers: JSON_CT, body: JSON.stringify({ name: 'big', type: 'application/octet-stream', size: capBytes - 100 }) });
+    assert.equal(r.status, 201);
+    // ...now a raw PUT that fits under the cap on its own must be refused because the reservation is counted.
+    const put = await t.fetch('/api/files?name=x&type=text/plain', { method: 'PUT', cookie, headers: { 'Content-Type': 'text/plain', 'Content-Length': String(200) }, body: 'y'.repeat(200) });
+    assert.equal(put.status, 507);
+    // abort the chunked session; the reservation is released and the raw PUT now succeeds.
+    const sess = await r.json();
+    assert.equal((await t.fetch(`/api/uploads/${sess.id}`, { method: 'DELETE', cookie })).status, 204);
+    const put2 = await t.fetch('/api/files?name=x&type=text/plain', { method: 'PUT', cookie, headers: { 'Content-Type': 'text/plain', 'Content-Length': String(200) }, body: 'y'.repeat(200) });
+    assert.equal(put2.status, 201);
+  });
+});

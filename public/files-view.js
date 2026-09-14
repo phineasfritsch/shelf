@@ -36,7 +36,8 @@ const INLINE_TYPES = new Set([
 ]);
 const SHARE_MAX_BYTES = 100 * 1024 * 1024;
 const SOON_MS = 12 * 3600e3;
-const UNDO_MS = 5000;
+const UNDO_MS = 12_000;        // window to undo a delete before the DELETE actually fires
+const UNDO_TICK_MS = 250;      // how often the on-card countdown + shrinking bar refresh
 const COUNTDOWN_MS = 60_000;
 const FLIP_MS = 1500;
 const ARCHIVE_RE = /^application\/(zip|x-zip-compressed|x-7z-compressed|x-rar-compressed|vnd\.rar|gzip|x-gzip|x-tar|x-bzip2|x-xz|zstd)$/;
@@ -290,14 +291,35 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
     const delBtn = button('f-delete', 'Delete');
     actions.append(openA, dlA, shareBtn, copyBtn, keepBtn, delBtn);
 
-    card.append(thumb, name, meta, actions);
-    const refs = { thumb, name, size, expiry, openA, dlA, shareBtn, copyBtn, keepBtn, delBtn, thumbKey: null };
+    // Undo row: shown in place of the action row while a delete is pending (so it never overlaps the
+    // buttons that were just tapped). Live countdown + shrinking bar + a big Undo button.
+    const delRow = el('div', 'f-undo');
+    delRow.hidden = true;
+    const delText = el('span', 'f-undo-text', 'Deleting…');
+    const undoBtn = button('f-undo-btn', 'Undo', 'Undo delete');
+    const delRowTop = el('div', 'f-undo-row');
+    delRowTop.append(delText, undoBtn);
+    const delFill = el('div', 'f-undo-fill');
+    const delTrack = el('div', 'f-undo-track');
+    delTrack.appendChild(delFill);
+    delRow.append(delRowTop, delTrack);
+
+    card.append(thumb, name, meta, actions, delRow);
+    const refs = { thumb, name, size, expiry, openA, dlA, shareBtn, copyBtn, keepBtn, delBtn, actions, delRow, delText, delFill, thumbKey: null };
     const entry = { el: card, refs, meta: f };
 
     shareBtn.addEventListener('click', () => share(entry));
     copyBtn.addEventListener('click', () => copyLink(entry));
     keepBtn.addEventListener('click', () => toggleKeep(entry));
     delBtn.addEventListener('click', () => softDelete(entry));
+    // While a delete is pending the whole greyed card is one big Undo target (thumb link, undo button,
+    // dead space alike). Capture so the click can never reach the thumbnail anchor and navigate away.
+    card.addEventListener('click', (e) => {
+      if (!pendingDeletes.has(entry.meta.id)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      undoDelete(entry.meta.id);
+    }, true);
 
     updateFileCard(entry, f);
     return entry;
@@ -348,6 +370,10 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
     for (const b of [shareBtn, copyBtn, keepBtn, delBtn]) b.disabled = deleting;
     entry.el.className = `f-card f-card--${ic.kind}${kept ? ' f-card--kept' : ''}${deleting ? ' f-card--deleting' : ''}`;
     entry.el.setAttribute('aria-busy', deleting ? 'true' : 'false');
+    // Swap the action row for the undo row (never both), and keep the countdown honest across re-renders.
+    entry.refs.actions.hidden = deleting;
+    entry.refs.delRow.hidden = !deleting;
+    if (deleting) tickDelete(f.id);
   }
 
   function tickExpiry(entry) {
@@ -417,31 +443,44 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
     }
   }
 
-  // Delete: grey the card, show "Deleted — Undo" for 5 s, send DELETE only when that time is up.
+  // Delete: grey the card, show "Deleted — Undo" and an on-card countdown for UNDO_MS, send DELETE only
+  // when that time is up. Undo works from the toast, the on-card button, or a click anywhere on the card.
   function softDelete(entry) {
     const id = entry.meta.id;
     if (pendingDeletes.has(id)) return;
-    const pending = { timer: null, handle: null };
+    // Wall-clock deadline for the UI countdown, matching the commit setTimeout (both real elapsed time).
+    const pending = { timer: null, handle: null, tick: null, deadline: Date.now() + UNDO_MS };
     pendingDeletes.set(id, pending);
     pending.timer = setTimeout(() => commitDelete(id), UNDO_MS);
     pending.handle = say('Deleted', { action: { label: 'Undo', onClick: () => undoDelete(id) }, ms: UNDO_MS });
+    pending.tick = setInterval(() => tickDelete(id), UNDO_TICK_MS);
     render();
+    tickDelete(id);
+  }
+
+  // Refresh one pending delete's countdown text + shrinking bar. Cheap; safe to call from a render too.
+  function tickDelete(id) {
+    const p = pendingDeletes.get(id);
+    const entry = cards.get(`f:${id}`);
+    if (!p || !entry) return;
+    const leftMs = Math.max(0, p.deadline - Date.now());
+    const secs = Math.ceil(leftMs / 1000);
+    if (entry.refs.delText) entry.refs.delText.textContent = secs > 0 ? `Deleting in ${secs}s` : 'Deleting…';
+    if (entry.refs.delFill) entry.refs.delFill.style.width = `${(leftMs / UNDO_MS) * 100}%`;
   }
 
   function undoDelete(id) {
     const p = pendingDeletes.get(id);
     if (!p) return;
-    clearTimeout(p.timer);
+    clearPending(p);
     pendingDeletes.delete(id);
-    closeToast(p.handle);
     render();
   }
 
   async function commitDelete(id) {
     const p = pendingDeletes.get(id);
     if (!p) return;
-    clearTimeout(p.timer);
-    closeToast(p.handle);
+    clearPending(p);
     try {
       await api.remove(id);
       // The `files` broadcast removes the card; drop the local row now so it does not linger on a slow socket.
@@ -452,6 +491,14 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
       pendingDeletes.delete(id);
       render();
     }
+  }
+
+  // Stop everything a pending delete owns: the commit timer, the countdown ticker, and its toast.
+  function clearPending(p) {
+    if (!p) return;
+    clearTimeout(p.timer);
+    if (p.tick) clearInterval(p.tick);
+    closeToast(p.handle);
   }
 
   function closeToast(handle) {
@@ -507,7 +554,7 @@ export function createFilesView({ container, uploads, serverNow, toast, api } = 
     usedBytes = Number(used) || 0;
     // A file the server no longer lists cannot be undone anymore; drop its pending delete quietly.
     for (const id of [...pendingDeletes.keys()]) {
-      if (!files.some(f => f.id === id)) { const p = pendingDeletes.get(id); clearTimeout(p.timer); closeToast(p.handle); pendingDeletes.delete(id); }
+      if (!files.some(f => f.id === id)) { clearPending(pendingDeletes.get(id)); pendingDeletes.delete(id); }
     }
     render();
   }

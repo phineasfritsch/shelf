@@ -251,3 +251,22 @@ describe('doc sync', () => {
     c.close(); await c.closed;
   });
 });
+
+describe('server-enforced text cap', () => {
+  let t, cookie;
+  before(async () => { t = await startTestServer({ MAX_TEXT_KB: '1' }); cookie = await t.login(); }); // 1024 chars
+  after(async () => { await t.stop(); });
+
+  test('an oversized update is trimmed to the cap by the server and the trim is broadcast', async () => {
+    const cap = t.app.cfg.maxTextChars;
+    const a = await t.connectSynced(cookie);
+    const b = await t.connectSynced(cookie);
+    await waitUntil(() => a.peers === 2 && b.peers === 2, { label: 'peers=2' });
+    a.ytext.insert(0, 'x'.repeat(cap + 50));               // a scripted client ignoring the client-side limit
+    await waitUntil(() => t.app.doc.getText().length === cap, { label: 'server trimmed to cap' });
+    await waitUntil(() => a.text().length === cap && b.text().length === cap, { label: 'both replicas see the trim' });
+    assert.equal(t.app.doc.getText().length, cap);
+    a.close(); b.close();
+    await Promise.all([a.closed, b.closed]);
+  });
+});

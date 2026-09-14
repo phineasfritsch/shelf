@@ -54,7 +54,7 @@ export async function start(overrides = {}) {
 
   const http = createHttpServer({
     cfg, log: log.child('http'), router, staticServer, auth,
-    healthz: () => ({ files: files.count(), clients: ws.clientCount(), uptime: Math.round(process.uptime()) }),
+    healthz: () => ({}),   // public liveness only: {ok, draining}. Operational counts are not disclosed unauthenticated.
   });
   const ws = createWs({ cfg, log: log.child('ws'), server: http.server, auth, doc, files });
   auth.onSessionsRevoked = (idHashes, reason) => ws.closeSessions(idHashes, reason);

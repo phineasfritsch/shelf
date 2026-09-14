@@ -6,6 +6,7 @@
 import * as Y from './vendor/yjs.js';
 import { createNet, clearLocalState } from './net.js';
 import { createEditor } from './editor.js';
+import { createPresence } from './presence.js';
 import { createUploads } from './uploads.js';
 import { createFilesView, formatSize } from './files-view.js';
 import { findUrls } from './textdiff.js';
@@ -217,6 +218,61 @@ function maxTextChars() {
   const kb = Number(net.limits && net.limits.maxTextKB);
   return kb > 0 ? Math.round(kb * 1024) : bootMaxTextChars;
 }
+
+// ---------- live presence: remote carets + typing hint ----------
+// The overlay renders OTHER devices' carets (net 'presence' / 'presence-gone'); here we publish THIS
+// device's caret. It is throttled so caret moves and typing never turn into a per-keystroke firehose.
+const presence = createPresence({ textarea: ui.textarea, net, typingHint: document.getElementById('typing-hint') });
+
+const PRESENCE_THROTTLE_MS = 90;   // fastest cadence we send our caret at (server contract: ~80–120 ms)
+const TYPING_IDLE_MS = 1000;       // typing:true self-clears this long after the last input
+let presenceTimer = null;          // trailing-edge throttle timer
+let presenceLastSent = 0;
+let pendingTyping = false;         // OR of "was typing" seen during the current throttle window
+let typingIdleTimer = null;
+
+// head = the moving end of the selection (caret). Respect a backward selection so the caret bar lands
+// on the correct end; a===h is a collapsed caret.
+function currentSelection() {
+  let s = ui.textarea.selectionStart, e = ui.textarea.selectionEnd;
+  if (typeof s !== 'number') s = 0;
+  if (typeof e !== 'number') e = s;
+  return ui.textarea.selectionDirection === 'backward' ? { a: e, h: s } : { a: s, h: e };
+}
+function flushPresence(typing) {
+  presenceLastSent = Date.now();
+  presenceTimer = null;
+  const { a, h } = currentSelection();
+  net.sendPresence({ a, h, typing });
+}
+function sendPresence(typing) {
+  if (typing) pendingTyping = true;
+  if (presenceTimer) return;                       // a trailing send is already queued; it reads the latest selection
+  const since = Date.now() - presenceLastSent;
+  if (since >= PRESENCE_THROTTLE_MS) { const t = pendingTyping; pendingTyping = false; flushPresence(t); }
+  else presenceTimer = setTimeout(() => { const t = pendingTyping; pendingTyping = false; flushPresence(t); }, PRESENCE_THROTTLE_MS - since);
+}
+
+ui.textarea.addEventListener('input', () => {
+  sendPresence(true);
+  if (typingIdleTimer) clearTimeout(typingIdleTimer);
+  typingIdleTimer = setTimeout(() => { typingIdleTimer = null; sendPresence(false); }, TYPING_IDLE_MS);
+});
+const onCaretMove = () => sendPresence(false);
+ui.textarea.addEventListener('keyup', onCaretMove);
+ui.textarea.addEventListener('click', onCaretMove);
+ui.textarea.addEventListener('select', onCaretMove);
+ui.textarea.addEventListener('focus', onCaretMove);
+document.addEventListener('selectionchange', () => { if (document.activeElement === ui.textarea) sendPresence(false); });
+ui.textarea.addEventListener('blur', () => {
+  if (typingIdleTimer) { clearTimeout(typingIdleTimer); typingIdleTimer = null; }
+  if (presenceTimer) { clearTimeout(presenceTimer); presenceTimer = null; }
+  flushPresence(false);                            // final caret + typing cleared, sent immediately
+});
+// Re-announce our caret whenever the peer set changes (a newcomer triggers everyone to resend, so it
+// sees the existing carets) and once we're synced on a fresh connection.
+net.on('peers', () => sendPresence(false));
+net.on('synced', () => sendPresence(false));
 
 let lastAnnounced = 'connecting';
 // APP_NAME: the HTML is static, so ask the server once and rename the header/title if it was customised.
