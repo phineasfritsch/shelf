@@ -211,7 +211,7 @@ export function createUploads({ getLimits, toast, onChange } = {}) {
       if (status === 507) return fail(item, 'Storage full');
       if (status === 0) return fail(item, 'Connection lost');
       if (json && typeof json.error === 'string') return fail(item, `Upload failed (${json.error.replace(/_/g, ' ')})`);
-      // A non-JSON 4xx/5xx did not come from Shelf: almost always a proxy body-size limit or timeout page.
+      // A non-JSON 4xx/5xx did not come from Shelfy: almost always a proxy body-size limit or timeout page.
       fail(item, 'Blocked by reverse proxy (body size limit?)');
     };
 

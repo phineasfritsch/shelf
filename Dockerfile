@@ -1,4 +1,4 @@
-# Shelf - single-stage image. Nothing to build: the browser code is served as-is
+# Shelfy - single-stage image. Nothing to build: the browser code is served as-is
 # from public/ (yjs/qrcode are pre-vendored and committed), so the image is just
 # Node + ws + yjs + the source tree. ~65 MB.
 FROM node:26-alpine

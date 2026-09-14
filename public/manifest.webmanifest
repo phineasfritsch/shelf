@@ -1,6 +1,6 @@
 {
-  "name": "Shelf",
-  "short_name": "Shelf",
+  "name": "Shelfy",
+  "short_name": "Shelfy",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

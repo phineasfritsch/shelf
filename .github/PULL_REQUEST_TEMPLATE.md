@@ -1,4 +1,4 @@
-<!-- Thanks for contributing. Keep Shelf small - see CONTRIBUTING.md. -->
+<!-- Thanks for contributing. Keep Shelfy small - see CONTRIBUTING.md. -->
 
 ## What and why
 

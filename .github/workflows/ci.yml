@@ -34,12 +34,12 @@ jobs:
         with:
           context: .
           load: true
-          tags: shelf:ci
+          tags: shelfy:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Boot and probe
         run: |
-          docker run -d --name shelf -p 8080:8080 -e PASSWORD=ci shelf:ci
+          docker run -d --name shelf -p 8080:8080 -e PASSWORD=ci shelfy:ci
           for i in $(seq 1 30); do
             if curl -fs http://127.0.0.1:8080/healthz; then echo; break; fi
             sleep 1

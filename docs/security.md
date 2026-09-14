@@ -1,6 +1,6 @@
 # Security model
 
-Shelf is single-user: one password, and everyone who has it sees the same shelf. The job of the security design is
+Shelfy is single-user: one password, and everyone who has it sees the same shelf. The job of the security design is
 that nobody *without* the password can read, change or delete anything, cannot lock the owner out, and cannot use an
 uploaded file to attack the owner's browser. Report problems privately; see [SECURITY.md](../SECURITY.md).
 
@@ -97,7 +97,7 @@ Each connection's caret/selection position is relayed to the other devices as sm
 
 ## Transport
 
-Shelf does not do TLS itself. On plain `http://` the password and the cookie cross the network in clear: fine on a
+Shelfy does not do TLS itself. On plain `http://` the password and the cookie cross the network in clear: fine on a
 trusted LAN, not fine on the internet. Put it behind an HTTPS proxy or a tunnel for anything beyond your own Wi-Fi;
 see [deployment.md](deployment.md).
 

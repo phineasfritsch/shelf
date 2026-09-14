@@ -1,6 +1,6 @@
 # Deployment
 
-Shelf speaks plain HTTP on one port. Everything else (TLS, a public name, access from outside your LAN) is done by
+Shelfy speaks plain HTTP on one port. Everything else (TLS, a public name, access from outside your LAN) is done by
 something in front of it. This page covers every supported way to put that something there, plus backups and upgrades.
 
 - [Cloudflare Tunnel](#cloudflare-tunnel-recommended-for-remote-access)
@@ -16,27 +16,27 @@ something in front of it. This page covers every supported way to put that somet
 No port forwarding, free HTTPS, works behind CGNAT. Needs a domain on Cloudflare (the free plan is fine).
 
 1. Cloudflare dashboard → **Zero Trust → Networks → Tunnels → Create a tunnel** (connector: cloudflared). Copy the token.
-2. Under the tunnel's **Public hostnames** add e.g. `shelf.example.com` → service `http://shelf:8080`.
+2. Under the tunnel's **Public hostnames** add e.g. `shelfy.example.com` → service `http://shelf:8080`.
 3. `echo 'TUNNEL_TOKEN=<token>' >> .env`
 4. `docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build`
 
 `docker-compose.tunnel.yml` adds the connector, sets `TRUST_PROXY=1` and `COOKIE_SECURE=true`, and stops publishing
-port 8080 on the host, so the tunnel is the only way in. Cloudflare caps single requests at 100 MB; Shelf uploads
+port 8080 on the host, so the tunnel is the only way in. Cloudflare caps single requests at 100 MB; Shelfy uploads
 anything above 8 MiB in 8 MiB parts, so file size is limited only by `MAX_FILE_MB`.
 
-Optional second layer: put **Cloudflare Access** on the hostname so anonymous traffic never even reaches Shelf.
+Optional second layer: put **Cloudflare Access** on the hostname so anonymous traffic never even reaches Shelfy.
 
 If you already use the `cloudflared` CLI, the same thing without the dashboard:
 
 ```bash
 cloudflared tunnel create shelf
-cloudflared tunnel route dns shelf shelf.example.com
+cloudflared tunnel route dns shelf shelfy.example.com
 cloudflared tunnel token shelf        # → TUNNEL_TOKEN for .env
 ```
 
 ## Reverse proxy
 
-Shelf needs three things from a proxy: WebSocket upgrades on `/ws`, `X-Forwarded-Proto` (so the session cookie gets
+Shelfy needs three things from a proxy: WebSocket upgrades on `/ws`, `X-Forwarded-Proto` (so the session cookie gets
 `Secure`), and request bodies of at least 8 MiB (uploads are chunked at that size). Set `TRUST_PROXY=1` so the
 login rate limiter sees real client IPs, and remove the `ports:` mapping from compose once only the proxy network
 reaches the container.
@@ -47,7 +47,7 @@ Do not strip or rewrite response headers: `Content-Security-Policy`, `Content-Di
 ### Caddy
 
 ```
-shelf.example.com {
+shelfy.example.com {
     reverse_proxy shelf:8080
 }
 ```
@@ -61,7 +61,7 @@ Forward ports 80 and 443 on your router to the box and point a DNS name at your 
 ```yaml
     labels:
       traefik.enable: "true"
-      traefik.http.routers.shelf.rule: "Host(`shelf.example.com`)"
+      traefik.http.routers.shelf.rule: "Host(`shelfy.example.com`)"
       traefik.http.routers.shelf.entrypoints: "websecure"
       traefik.http.routers.shelf.tls.certresolver: "letsencrypt"
       traefik.http.services.shelf.loadbalancer.server.port: "8080"
@@ -75,7 +75,7 @@ Traefik forwards WebSockets and sets `X-Forwarded-*` by default and does not lim
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name shelf.example.com;
+    server_name shelfy.example.com;
     # ssl_certificate / ssl_certificate_key ...
 
     location / {
@@ -136,12 +136,12 @@ Consistent backup (stop the app so the SQLite WAL is checkpointed and no upload 
 
 ```bash
 docker compose stop shelf
-docker run --rm -v shelf_shelf-data:/data -v "$PWD":/backup alpine \
+docker run --rm -v shelfy_shelfyy-data:/data -v "$PWD":/backup alpine \
   tar czf /backup/shelf-$(date +%F).tgz -C /data .
 docker compose start shelf
 ```
 
-Compose names the volume `<project>_shelf-data`, where `<project>` is the folder you ran `docker compose` in;
+Compose names the volume `<project>_shelfy-data`, where `<project>` is the folder you ran `docker compose` in;
 `docker volume ls` shows the real name. With a bind mount, `tar czf shelf.tgz -C ./data .` is enough. Live backups
 with restic or `sqlite3 /data/shelf.db ".backup /tmp/shelf.db"` plus a copy of `files/` also work; a WAL-mode
 database is safe to read while the app runs.
@@ -150,7 +150,7 @@ Restore: stop the app, untar into the (empty) volume, hand it back to uid 1000:
 
 ```bash
 docker compose stop shelf
-docker run --rm -v shelf_shelf-data:/data -v "$PWD":/backup alpine \
+docker run --rm -v shelfy_shelfyy-data:/data -v "$PWD":/backup alpine \
   sh -c 'rm -rf /data/* && tar xzf /backup/shelf-2026-01-31.tgz -C /data && chown -R 1000:1000 /data'
 docker compose start shelf
 ```
@@ -165,7 +165,7 @@ git pull
 docker compose up -d --build        # add --pull always to refresh the node:26-alpine base too
 ```
 
-Shelf refuses to start on a database written by a newer version (`schema_version` in the `meta` table), so
+Shelfy refuses to start on a database written by a newer version (`schema_version` in the `meta` table), so
 downgrading means restoring a backup. Restarts are graceful: `/healthz` returns `503` as soon as `SIGTERM` arrives so
 a proxy stops routing, WebSocket clients get `{"t":"bye","reason":"shutdown"}` and reconnect on their own, in-flight
 uploads get `SHUTDOWN_TIMEOUT_SEC` to finish, and the text is compacted and mirrored to `text.txt` before the
@@ -176,17 +176,17 @@ front end is served on the next page load.
 
 **Login "works" but immediately returns to the login page.** The browser is dropping the cookie. Almost always the
 cookie has `Secure` but the page is loaded over plain `http://`: you set `COOKIE_SECURE=true` (put it back to `auto`
-or `false`), or something in front of Shelf adds `X-Forwarded-Proto: https` on an http hop. Check the `Set-Cookie`
+or `false`), or something in front of Shelfy adds `X-Forwarded-Proto: https` on an http hop. Check the `Set-Cookie`
 header in DevTools → Network → `/api/login`.
 
 **`403 {"error":"bad_origin"}` on login, or the WebSocket never connects (pill stuck on *Reconnecting…*).** The
 `Origin` the browser sends does not match the `Host` the app sees. When a proxy rewrites `Host`, set `TRUST_PROXY=1`
-(it will then use `X-Forwarded-Host`) or list the public origin in `ALLOWED_ORIGINS=https://shelf.example.com`. A
+(it will then use `X-Forwarded-Host`) or list the public origin in `ALLOWED_ORIGINS=https://shelfy.example.com`. A
 WebSocket that fails while plain requests work means the proxy is not forwarding the upgrade; see the nginx block.
 
-**Uploads fail with "Blocked by reverse proxy (body size limit?)".** The proxy rejected a request body before Shelf
+**Uploads fail with "Blocked by reverse proxy (body size limit?)".** The proxy rejected a request body before Shelfy
 saw it: nginx `client_max_body_size` below 8 MiB, a Traefik `buffering` middleware, or a request timeout on a slow
-link. Shelf's own limit is `MAX_FILE_MB` and shows as "Too large (limit N MB)" instead. "Storage full" means
+link. Shelfy's own limit is `MAX_FILE_MB` and shows as "Too large (limit N MB)" instead. "Storage full" means
 `MAX_STORAGE_MB` is reached.
 
 **`DATA_DIR /data is not writable by uid 1000` on start.** Bind-mounted directory owned by someone else.
@@ -213,5 +213,5 @@ and needs no login.
 are kept locally and merged when the socket is back; nothing is lost by waiting.
 
 **The "Link a phone" QR code points at `localhost`.** You opened the app on the server itself. The QR encodes the
-address in your browser's URL bar (falling back to a LAN address when that is `localhost`); open Shelf via the
+address in your browser's URL bar (falling back to a LAN address when that is `localhost`); open Shelfy via the
 address the phone will use and generate the code there.

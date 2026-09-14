@@ -1,11 +1,11 @@
 name: Feature request
-description: Suggest something for Shelf (please read the Non-goals first)
+description: Suggest something for Shelfy (please read the Non-goals first)
 labels: [enhancement]
 body:
   - type: markdown
     attributes:
       value: |
-        Shelf is deliberately small and single-user. Accounts, sharing between people, folders, rich text, and public
+        Shelfy is deliberately small and single-user. Accounts, sharing between people, folders, rich text, and public
         share links are explicit non-goals (see the README and `docs/SPEC.md`). Requests in that direction will likely
         be declined - a fork is the right home for them.
   - type: textarea
@@ -24,5 +24,5 @@ body:
     attributes:
       label: Scope check
       options:
-        - label: This keeps Shelf single-user and does not add accounts or per-user separation
+        - label: This keeps Shelfy single-user and does not add accounts or per-user separation
         - label: This does not require a build step or a third runtime dependency

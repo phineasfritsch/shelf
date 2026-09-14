@@ -97,7 +97,7 @@
     }
     if (res.status === 401) { showError(wrong); return false; }
     if (res.status === 429) { startCountdown(retryAfterSeconds(res, data)); return false; }
-    if (res.status === 403) { showError('Request blocked by the origin check - open Shelf by its own address, not through another site.'); return false; }
+    if (res.status === 403) { showError('Request blocked by the origin check - open Shelfy by its own address, not through another site.'); return false; }
     const detail = data && (data.message || data.error);
     showError(`Login failed (HTTP ${res.status}${detail ? ': ' + detail : ''})`);
     return false;

@@ -2,14 +2,14 @@
 
 <img src="docs/media/icon.png" alt="" width="88" height="88">
 
-# Shelf
+# Shelfy
 
 **One text box and a few files that follow you between your phone and your computer.**
 
 Type on either device and it is on the other within a round trip. Drop, paste, or photograph a file and it is
 everywhere, with a thumbnail. Everything behind one password. One container, one volume, no accounts, no cloud.
 
-[![CI](https://github.com/phineasfritsch/shelf/actions/workflows/ci.yml/badge.svg)](https://github.com/phineasfritsch/shelf/actions/workflows/ci.yml)
+[![CI](https://github.com/phineasfritsch/shelfy/actions/workflows/ci.yml/badge.svg)](https://github.com/phineasfritsch/shelfy/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A524-brightgreen.svg)
 ![Runtime deps](https://img.shields.io/badge/runtime%20deps-2-brightgreen.svg)
@@ -20,7 +20,7 @@ everywhere, with a thumbnail. Everything behind one password. One container, one
 </div>
 
 <div align="center">
-<img src="docs/media/shelf-demo.gif" alt="A phone types into the shared box and the text, a live remote caret, and a shared photo appear on the laptop in real time" width="760">
+<img src="docs/media/shelfy-demo.gif" alt="A phone types into the shared box and the text, a live remote caret, and a shared photo appear on the laptop in real time" width="820">
 <br><sub>Real capture: one device types and shares a photo, the other sees it live, remote caret and all.</sub>
 </div>
 
@@ -32,7 +32,7 @@ Everyone has a way to move a photo or an address from their phone to their lapto
 it to yourself. You message it to yourself. You plug in a cable. Cloud clipboards want an account and a subscription
 and send your clipboard to someone else's server.
 
-Shelf is the boring, private version: a single web page you host yourself. It holds **one live text box** shared
+Shelfy is the boring, private version: a single web page you host yourself. It holds **one live text box** shared
 across every device you open it on, and **files that expire on their own** so it never becomes a junk drawer. Open it
 on your phone and your laptop, and they are the same shelf.
 
@@ -59,17 +59,17 @@ password, no build step, and no request to any third party at runtime.
   logs to stdout. Works on plain `http://` on your LAN and behind Caddy / Traefik / nginx / a Cloudflare Tunnel.
 
 <div align="center">
-<img src="docs/media/shelf-files.jpg" alt="File cards on a phone-width screen with thumbnails and Open, Download, Share, Copy link, Keep and Delete actions" width="380">
+<img src="docs/media/shelfy-files.jpg" alt="File cards on a phone-width screen with thumbnails and Open, Download, Share, Copy link, Keep and Delete actions" width="380">
 </div>
 
 ## How it compares
 
-Moving things between your own devices is a crowded space, and Shelf is deliberately a different shape from most of it.
-The others are **ad-hoc transfer**: open both devices, both awake, and push a file across right now. Shelf is a
+Moving things between your own devices is a crowded space, and Shelfy is deliberately a different shape from most of it.
+The others are **ad-hoc transfer**: open both devices, both awake, and push a file across right now. Shelfy is a
 **persistent, always-there shelf** - a live text box and a small set of expiring files that are simply *there* whenever
 you open the page, on either device, without the other one being awake.
 
-| | Shelf | LocalSend / PairDrop / Snapdrop | Syncthing | A cloud clipboard/notes app |
+| | Shelfy | LocalSend / PairDrop / Snapdrop | Syncthing | A cloud clipboard/notes app |
 |---|---|---|---|---|
 | Live shared **text box** across devices | ✅ core feature | ❌ | ❌ | sometimes |
 | Files that **expire on their own** | ✅ configurable TTL | ❌ (one-shot send) | ❌ (mirrors forever) | rarely |
@@ -79,14 +79,14 @@ you open the page, on either device, without the other one being awake.
 | Setup | one container | app per device | app per device + config | signup |
 
 If you want to fling a file from one phone to another in the same room, use LocalSend. If you want a private
-always-on scratchpad plus a drop box that both your phone and your laptop share and that tidies itself up, that is Shelf.
+always-on scratchpad plus a drop box that both your phone and your laptop share and that tidies itself up, that is Shelfy.
 
 ## Quick start
 
 You need [Docker](https://docs.docker.com/get-docker/). That is the only requirement.
 
 ```bash
-git clone https://github.com/phineasfritsch/shelf.git && cd shelf
+git clone https://github.com/phineasfritsch/shelfy.git && cd shelfy
 docker compose up -d --build
 docker compose logs -f shelf
 ```
@@ -98,8 +98,8 @@ change other settings, see [docs/configuration.md](docs/configuration.md).
 Once a release is published, you can skip the clone and the build and run the prebuilt image directly:
 
 ```bash
-docker run -d --name shelf -p 8080:8080 -v shelf-data:/data -e PASSWORD=change-me \
-  ghcr.io/phineasfritsch/shelf:latest
+docker run -d --name shelf -p 8080:8080 -v shelfy-data:/data -e PASSWORD=change-me \
+  ghcr.io/phineasfritsch/shelfy:latest
 ```
 
 > **Just want to try it without Docker?** With Node 24+: `npm ci && PASSWORD=test DATA_DIR=./data npm start`, then
@@ -110,7 +110,7 @@ scan the QR code - no password typing on a phone keyboard.
 
 ## Access it from anywhere
 
-Shelf serves plain HTTP; something in front of it adds HTTPS and a public name. The easiest, with no port forwarding
+Shelfy serves plain HTTP; something in front of it adds HTTPS and a public name. The easiest, with no port forwarding
 and no static IP, is a **Cloudflare Tunnel** (needs a domain on Cloudflare's free plan):
 
 ```bash
@@ -120,7 +120,7 @@ echo 'TUNNEL_TOKEN=<token>' >> .env
 docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build
 ```
 
-That override runs the tunnel connector next to Shelf, turns on `Secure` cookies and proxy trust, and stops
+That override runs the tunnel connector next to Shelfy, turns on `Secure` cookies and proxy trust, and stops
 publishing the port on the host, so the tunnel is the only door in. Prefer your own domain, Traefik, nginx, or a
 private Tailscale mesh instead? All four are in **[docs/deployment.md](docs/deployment.md)**.
 
@@ -163,7 +163,7 @@ The complete table (20 variables), the password rules, and the on-disk layout ar
 
 ## Security
 
-Shelf is meant to face the internet behind HTTPS, so this is taken seriously and written down in full in
+Shelfy is meant to face the internet behind HTTPS, so this is taken seriously and written down in full in
 **[docs/security.md](docs/security.md)**. In short: `scrypt` password; sessions stored only as `sha256(token)`;
 `HttpOnly` `SameSite=Lax` cookies with automatic `Secure`; persisted per-IP login limiting plus a global bucket that
 can never lock the owner out; `SameSite` + `Origin` + `Content-Type` CSRF layers; WebSocket auth before the handshake
@@ -189,7 +189,7 @@ across two browser windows. Release notes are in **[CHANGELOG.md](CHANGELOG.md)*
 
 ## Non-goals
 
-Shelf is deliberately small. It is **not** a multi-user app, a Dropbox, or a notes app: no accounts, no sharing
+Shelfy is deliberately small. It is **not** a multi-user app, a Dropbox, or a notes app: no accounts, no sharing
 between different people, no folders, no rich text, no public share links. If you want those, fork it - the code is
 short and the design doc explains every seam.
 

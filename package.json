@@ -1,5 +1,5 @@
 {
-  "name": "shelf",
+  "name": "shelfy",
   "version": "1.0.0",
   "description": "One live text box + expiring file attachments, shared between your phone and your computer. Single container, single volume, password-protected.",
   "type": "module",
@@ -28,11 +28,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/phineasfritsch/shelf.git"
+    "url": "https://github.com/phineasfritsch/shelfy.git"
   },
-  "homepage": "https://github.com/phineasfritsch/shelf#readme",
+  "homepage": "https://github.com/phineasfritsch/shelfy#readme",
   "bugs": {
-    "url": "https://github.com/phineasfritsch/shelf/issues"
+    "url": "https://github.com/phineasfritsch/shelfy/issues"
   },
   "keywords": [
     "self-hosted",

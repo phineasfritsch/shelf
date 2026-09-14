@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for looking. Shelf is deliberately small; the best contributions keep it that way.
+Thanks for looking. Shelfy is deliberately small; the best contributions keep it that way.
 
 ## Ground rules
 
@@ -15,7 +15,7 @@ Thanks for looking. Shelf is deliberately small; the best contributions keep it 
 ## Getting started
 
 ```bash
-git clone https://github.com/phineasfritsch/shelf.git && cd shelf
+git clone https://github.com/phineasfritsch/shelfy.git && cd shelfy
 npm ci
 PASSWORD=test DATA_DIR=./data npm start        # http://localhost:8080
 npm test

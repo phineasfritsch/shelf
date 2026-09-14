@@ -255,7 +255,7 @@ describe('auth', () => {
     assert.equal(res.status, 200);
     const me = await res.json();
     assert.match(me.id, /^[0-9a-f]{12}$/);
-    assert.equal(me.appName, 'Shelf');
+    assert.equal(me.appName, 'Shelfy');
   });
 
   // Last: it leaves 127.0.0.1 locked out for the window, so it cleans up after itself.

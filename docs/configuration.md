@@ -14,8 +14,8 @@ list in file form (`node --env-file=.env server.js`, or `env_file:` in compose).
 | `PASSWORD` | - | Plaintext convenience. Hashed in memory at boot (with a salt persisted at `DATA_DIR/password.salt` so restarts do not log devices out), then deleted from the environment; logs a warning. |
 | `SESSION_DAYS` | `365` | Sliding session lifetime. A device used at least once per period is never logged out. |
 | `COOKIE_SECURE` | `auto` | `auto` = the cookie gets `Secure` when the request is HTTPS (TLS socket, or first `X-Forwarded-Proto` value is `https`); `true` / `false` force it. |
-| `TRUST_PROXY` | `0` | `1` = trust `X-Forwarded-For` (rightmost entry = client IP) and `X-Forwarded-Host` from the proxy in front of Shelf. Does not affect `X-Forwarded-Proto`, which is always honoured (see [security.md](security.md)). Enable it **only** when the proxy is the sole way in: with the container port published directly, `1` lets any client spoof `X-Forwarded-For` and dodge the login limiter. |
-| `ALLOWED_ORIGINS` | - | Comma-separated full origins (`https://shelf.example.com`) accepted by the CSRF/WebSocket Origin check in addition to the request's own host. Only needed when a proxy rewrites `Host` and you cannot set `TRUST_PROXY=1`. |
+| `TRUST_PROXY` | `0` | `1` = trust `X-Forwarded-For` (rightmost entry = client IP) and `X-Forwarded-Host` from the proxy in front of Shelfy. Does not affect `X-Forwarded-Proto`, which is always honoured (see [security.md](security.md)). Enable it **only** when the proxy is the sole way in: with the container port published directly, `1` lets any client spoof `X-Forwarded-For` and dodge the login limiter. |
+| `ALLOWED_ORIGINS` | - | Comma-separated full origins (`https://shelfy.example.com`) accepted by the CSRF/WebSocket Origin check in addition to the request's own host. Only needed when a proxy rewrites `Host` and you cannot set `TRUST_PROXY=1`. |
 | `FILE_TTL_HOURS` | `168` | Default lifetime of an uploaded file (decimals allowed). `0` = never expire. *Keep* on a file exempts it. |
 | `MAX_FILE_MB` | `2048` | Per-file upload cap (HTTP 413). |
 | `MAX_STORAGE_MB` | `0` | Total cap for stored files (HTTP 507 `storage_full`). `0` = unlimited. |
@@ -24,7 +24,7 @@ list in file form (`node --env-file=.env server.js`, or `env_file:` in compose).
 | `LOGIN_MAX_FAILS` | `5` | Failed logins per client IP within the window before HTTP 429 with `Retry-After`. Persisted in SQLite, so it survives restarts. |
 | `LOGIN_WINDOW_MIN` | `15` | Sliding window for the above. |
 | `SHUTDOWN_TIMEOUT_SEC` | `20` | Max wait for in-flight uploads on `SIGTERM`/`SIGINT`. The process hard-exits 5 s after that. |
-| `APP_NAME` | `Shelf` | Name shown in the header and page title (max 40 chars). |
+| `APP_NAME` | `Shelfy` | Name shown in the header and page title (max 40 chars). |
 | `LOG_JSON` | `0` | `1` = JSON lines on stdout instead of text lines. |
 
 ## Password
@@ -37,7 +37,7 @@ Generate a hash (reads stdin, never argv, so it stays out of shell history):
 ```bash
 printf '%s' 'correct horse battery staple' | npm run -s hash-password
 # or inside the image:
-printf '%s' 'correct horse battery staple' | docker run --rm -i shelf node scripts/hash-password.mjs
+printf '%s' 'correct horse battery staple' | docker run --rm -i shelfy node scripts/hash-password.mjs
 ```
 
 In `docker-compose.yml` **every `$` must be written as `$$`** (Compose interpolates `${VAR}`; `$$` is a literal
@@ -70,7 +70,7 @@ Only one process may use a `DATA_DIR` at a time. Never point two instances at th
 
 ## A note on the storage engine
 
-Shelf stores everything in one SQLite database through Node's built-in `node:sqlite` module. That module is still
+Shelfy stores everything in one SQLite database through Node's built-in `node:sqlite` module. That module is still
 marked **experimental** in Node and needs **Node 24 or newer** (the app suppresses its experimental warning). The
 Docker image pins a known-good runtime (`node:26-alpine`), and CI runs the suite on Node 24 and 26 across Linux and
 Windows, so a normal deployment is insulated from the churn. If you run from source, stay on a Node version the CI

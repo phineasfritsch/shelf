@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Shelf are recorded here. The format follows
+All notable changes to Shelfy are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [semantic versioning](https://semver.org/).
 
 ## [1.0.0] - 2026-09-14
@@ -32,4 +32,4 @@ First public release.
   jointly overshoot the cap.
 - The public `/healthz` probe returns only `{ok, draining}` and no longer discloses file or client counts.
 
-[1.0.0]: https://github.com/phineasfritsch/shelf/releases/tag/v1.0.0
+[1.0.0]: https://github.com/phineasfritsch/shelfy/releases/tag/v1.0.0

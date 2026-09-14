@@ -46,7 +46,7 @@ describe('files', () => {
   };
   const rowCount = () => t.app.db.prepare('SELECT COUNT(*) AS n FROM files').get().n;
 
-  const BODY = Buffer.from('Hello, Shelf! 0123456789 abcdefghijklmnopqrstuvwxyz');
+  const BODY = Buffer.from('Hello, Shelfy! 0123456789 abcdefghijklmnopqrstuvwxyz');
   let meta;
 
   test('PUT /api/files → 201 FileMeta; a connected socket receives the files broadcast', async () => {

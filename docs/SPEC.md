@@ -1,4 +1,4 @@
-# Shelf - Final Build Spec (v1)
+# Shelfy - Final Build Spec (v1)
 
 Single-user, self-hosted "one text box + expiring attachments" that stays live across a phone and a laptop. One Node process, one SQLite file, one volume, one container. This document is the implementation contract: build exactly this.
 
@@ -108,7 +108,7 @@ All read once in `lib/config.js`, validated, effective config printed at boot wi
 | `LOGIN_MAX_FAILS` | `5` | Failures per IP within the window before 429. |
 | `LOGIN_WINDOW_MIN` | `15` | Sliding window for the above. |
 | `SHUTDOWN_TIMEOUT_SEC` | `20` | Max wait for in-flight uploads on SIGTERM. |
-| `APP_NAME` | `Shelf` | Title / manifest name. |
+| `APP_NAME` | `Shelfy` | Title / manifest name. |
 | `LOG_JSON` | `0` | `1` = JSON lines to stdout instead of text. |
 
 **Password resolution order:** `PASSWORD_HASH` → `PASSWORD_FILE` → `PASSWORD` → `DATA_DIR/password.hash` → **first-run generation**.
@@ -140,7 +140,7 @@ Env vars always override the file. There is never a hardcoded default password.
 `GET /` serves `public/index.html` only with a valid session; otherwise 302 → `/login`. Because the server decides which HTML to send, an authenticated device never sees a login flash.
 
 ### Hashing
-`crypto.scrypt(password, salt, 32, { N: 32768, r: 8, p: 1 })`, 16-byte random salt, string format `scrypt$32768$8$1$<salt b64url>$<key b64url>`. Verify: parse, scrypt with the stored params, `crypto.timingSafeEqual`. If parsing/length fails, still run scrypt against a dummy salt and compare against a dummy key so the timing path is identical. `scripts/hash-password.mjs` reads stdin (`docker run --rm -i shelf node scripts/hash-password.mjs`), never argv.
+`crypto.scrypt(password, salt, 32, { N: 32768, r: 8, p: 1 })`, 16-byte random salt, string format `scrypt$32768$8$1$<salt b64url>$<key b64url>`. Verify: parse, scrypt with the stored params, `crypto.timingSafeEqual`. If parsing/length fails, still run scrypt against a dummy salt and compare against a dummy key so the timing path is identical. `scripts/hash-password.mjs` reads stdin (`docker run --rm -i shelfy node scripts/hash-password.mjs`), never argv.
 
 ### Sessions
 `POST /api/login` body `{"password":"…"}` (JSON only, ≤ 4 KB; `Content-Type` must be `application/json`). Success: `token = randomBytes(32).toString('base64url')` (43 chars); insert `sessions(id_hash = sha256(token) hex, created_at, last_seen_at, ua)`; respond `204` with `Set-Cookie`. Failure: full scrypt cost, then `401 {"error":"bad_password"}`.
@@ -430,7 +430,7 @@ The fallback is what makes it work on plain `http://LAN-IP` (no secure context) 
 ### PWA manifest (`public/manifest.webmanifest`)
 ```json
 {
-  "name": "Shelf", "short_name": "Shelf", "start_url": "/", "scope": "/", "display": "standalone",
+  "name": "Shelfy", "short_name": "Shelfy", "start_url": "/", "scope": "/", "display": "standalone",
   "background_color": "#0f172a", "theme_color": "#1d4ed8",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
@@ -506,7 +506,7 @@ Single stage (nothing to build). Runtime `node_modules` = `ws` + `yjs` + `lib0` 
 services:
   shelf:
     build: .
-    image: shelf:latest
+    image: shelfy:latest
     restart: unless-stopped
     init: true
     stop_grace_period: 30s
@@ -520,19 +520,19 @@ services:
       TRUST_PROXY: "1"              # only when behind Caddy/Traefik/nginx
       # COOKIE_SECURE: "auto"       # default; force "true" on known-HTTPS deployments
     volumes:
-      - shelf-data:/data
+      - shelfy-data:/data
     # --- Caddy via lucaslorentz/caddy-docker-proxy (uncomment) ---
     # networks: [caddy]
     # labels:
-    #   caddy: shelf.example.com
+    #   caddy: shelfy.example.com
     #   caddy.reverse_proxy: "{{upstreams 8080}}"
 volumes:
-  shelf-data:
+  shelfy-data:
 # networks:
 #   caddy:
 #     external: true
 ```
-Plain Caddyfile: `shelf.example.com { reverse_proxy shelf:8080 }` (WebSocket upgrade, `X-Forwarded-Proto` and unlimited bodies are automatic). Traefik: default labels suffice. nginx (README): `proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade"; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto $scheme; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; client_max_body_size 0; proxy_request_buffering off; proxy_read_timeout 3600s;`. Cloudflare's proxy caps request bodies at 100 MB - noted.
+Plain Caddyfile: `shelfy.example.com { reverse_proxy shelf:8080 }` (WebSocket upgrade, `X-Forwarded-Proto` and unlimited bodies are automatic). Traefik: default labels suffice. nginx (README): `proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade"; proxy_set_header Host $host; proxy_set_header X-Forwarded-Proto $scheme; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; client_max_body_size 0; proxy_request_buffering off; proxy_read_timeout 3600s;`. Cloudflare's proxy caps request bodies at 100 MB - noted.
 
 ### `.dockerignore`
 ```

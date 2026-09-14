@@ -11,7 +11,7 @@ import { createUploads } from './uploads.js';
 import { createFilesView, formatSize } from './files-view.js';
 import { findUrls } from './textdiff.js';
 
-let APP_NAME = 'Shelf';
+let APP_NAME = 'Shelfy';
 const DEFAULT_MAX_TEXT_KB = 2048;   // config default; the real value arrives in `hello` and is cached for the next boot
 const LIMITS_KEY = 'shelf.limits';  // cleared with every other shelf.* key on logout
 const CHIP_DEBOUNCE_MS = 300;
@@ -277,9 +277,9 @@ net.on('synced', () => sendPresence(false));
 let lastAnnounced = 'connecting';
 // APP_NAME: the HTML is static, so ask the server once and rename the header/title if it was customised.
 request('/api/me').then((me) => {
-  if (!me || typeof me.appName !== 'string' || !me.appName || me.appName === 'Shelf') return;
+  if (!me || typeof me.appName !== 'string' || !me.appName || me.appName === 'Shelfy') return;
   const h = document.querySelector('.hdr-name'); if (h) h.textContent = me.appName;
-  APP_NAME = me.appName; document.title = document.title.replace('Shelf', me.appName);
+  APP_NAME = me.appName; document.title = document.title.replace('Shelfy', me.appName);
 }).catch(() => { /* not fatal */ });
 // ---------- status pill, title, peers ----------
 

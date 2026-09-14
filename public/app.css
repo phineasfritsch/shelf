@@ -1,4 +1,4 @@
-/* Shelf - mobile-first, single column, light/dark via prefers-color-scheme. Shared by index.html and login.html.
+/* Shelfy - mobile-first, single column, light/dark via prefers-color-scheme. Shared by index.html and login.html.
    No inline styles anywhere (CSP style-src 'self'); JS only toggles classes / hidden and sets --vh. */
 
 /* ---------- tokens ---------- */
