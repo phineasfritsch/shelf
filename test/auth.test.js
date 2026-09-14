@@ -308,3 +308,28 @@ describe('plaintext PASSWORD across restarts', () => {
     assert.equal((await t.fetch('/api/me', { cookie: fresh })).status, 200);
   });
 });
+
+describe('auth hardening', () => {
+  let t;
+  before(async () => { t = await startTestServer(); });
+  after(async () => { await t.stop(); });
+
+  test('logout-all invalidates outstanding QR link tokens', async () => {
+    const cookie = await t.login();
+    const { token } = await (await t.fetch('/api/link', { method: 'POST', cookie })).json();
+    assert.equal((await t.fetch('/api/logout-all', { method: 'POST', cookie })).status, 204);
+    const claim = await t.fetch('/api/link/claim', { method: 'POST', headers: JSON_CT, body: JSON.stringify({ token }) });
+    assert.equal(claim.status, 401);
+  });
+
+  test('a parallel wrong-password burst is capped at LOGIN_MAX_FAILS', async () => {
+    t.app.db.exec('DELETE FROM login_attempts');
+    const rs = await Promise.all(Array.from({ length: 12 }, () =>
+      t.fetch('/api/login', { method: 'POST', headers: JSON_CT, body: JSON.stringify({ password: 'nope' }) })));
+    const codes = rs.map((r) => r.status);
+    assert.equal(codes.filter((c) => c === 401).length, 5);   // LOGIN_MAX_FAILS default
+    assert.equal(codes.filter((c) => c === 429).length, 7);
+    t.app.db.exec('DELETE FROM login_attempts');
+    assert.equal((await t.login()).startsWith('sid='), true);   // owner is never locked out for good
+  });
+});
