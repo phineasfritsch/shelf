@@ -1,0 +1,27 @@
+# Remote access via Cloudflare Tunnel — no port forwarding, free HTTPS, works behind CGNAT.
+#
+#   1. Cloudflare dashboard → Zero Trust → Networks → Tunnels → Create tunnel (connector: cloudflared).
+#      Copy the token. Add a public hostname (e.g. shelf.example.com) whose service is  http://shelf:8080
+#   2. echo 'TUNNEL_TOKEN=<paste token>' >> .env
+#   3. docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build
+#
+# This override: adds the cloudflared connector, tells Shelf it is behind a trusted proxy, and stops publishing
+# port 8080 on the host (with the port open, anyone on the LAN could spoof X-Forwarded-For past the login limiter).
+# LAN devices reach the app through the tunnel hostname like everyone else. Uploads are chunked at 8 MiB, so
+# Cloudflare's 100 MB request-body cap does not limit file size.
+services:
+  shelf:
+    ports: !reset []
+    environment:
+      TRUST_PROXY: "1"
+      COOKIE_SECURE: "true"       # the public hostname is always https
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env (Cloudflare Zero Trust → Tunnels)}
+    depends_on:
+      shelf:
+        condition: service_healthy

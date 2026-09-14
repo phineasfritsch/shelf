@@ -13,6 +13,8 @@
 //   serverId FileMeta.id once the server answered 201 (null otherwise)
 
 const CONCURRENCY = 2;
+const CHUNKED_MIN_BYTES = 8 * 1024 * 1024; // above this, upload in parts (proxies cap single bodies; parts retry individually)
+const CHUNK_RETRIES = 4;
 const THUMB_EDGE = 320;            // long edge of the generated thumbnail, px
 const THUMB_QUALITY = 0.7;
 const THUMB_MAX_BYTES = 200 * 1024; // server refuses bigger thumbs
@@ -79,6 +81,7 @@ export function createUploads({ getLimits, toast, onChange } = {}) {
     if (i < 0) return false;
     const p = priv.get(id);
     if (p?.xhr) { p.xhr.onabort = null; p.xhr.onerror = null; p.xhr.onload = null; try { p.xhr.abort(); } catch { /* already finished */ } }
+    if (p?.session) { const sid = p.session; p.session = null; fetch(`/api/uploads/${encodeURIComponent(sid)}`, { method: 'DELETE', keepalive: true }).catch(() => {}); }
     priv.delete(id);
     items.splice(i, 1);
     return true;
@@ -150,6 +153,8 @@ export function createUploads({ getLimits, toast, onChange } = {}) {
     item.error = null;
     notify();
 
+    if (item.file.size > CHUNKED_MIN_BYTES) { p.xhr = null; startChunked(item, p, mime); return; }
+
     xhr.open('PUT', `/api/files?name=${encodeURIComponent(item.name)}&type=${encodeURIComponent(mime)}`, true);
     xhr.setRequestHeader('Content-Type', mime);
     xhr.responseType = 'text';
@@ -216,6 +221,91 @@ export function createUploads({ getLimits, toast, onChange } = {}) {
       // e.g. the File handle went stale (picked file deleted on disk before the upload started)
       fail(item, 'Could not read file');
     }
+  }
+
+  // ---------- chunked upload ----------
+  function progress(item, p, loaded) {
+    const now = Date.now();
+    item.loaded = Math.min(loaded, item.total);
+    const s = p.samples;
+    s.push({ t: now, loaded: item.loaded });
+    while (s.length > 2 && s[1].t <= now - RATE_WINDOW_MS) s.shift();
+    const dt = now - s[0].t;
+    item.rate = dt > 0 ? Math.max(0, (item.loaded - s[0].loaded) / dt * 1000) : 0;
+    if (now - p.lastNotify >= PROGRESS_NOTIFY_MS) { p.lastNotify = now; notify(); }
+  }
+
+  function loggedOut(item) {
+    item.error = 'Logged out — reload';
+    item.state = 'error';
+    notify();
+    location.replace('/login');
+  }
+
+  function putChunk(item, p, sid, index, blob, base) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      p.xhr = xhr;
+      xhr.open('PUT', `/api/uploads/${encodeURIComponent(sid)}/${index}`, true);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+      xhr.upload.onprogress = (e) => { if (item.state === 'uploading') progress(item, p, base + e.loaded); };
+      xhr.onerror = () => reject(new Error('Connection lost'));
+      xhr.ontimeout = () => reject(new Error('Connection lost'));
+      xhr.onabort = () => reject(Object.assign(new Error('Cancelled'), { fatal: true }));
+      xhr.onload = () => {
+        p.xhr = null;
+        if (xhr.status === 204) return resolve();
+        const fatal = [400, 401, 404, 413, 507].includes(xhr.status);
+        const msg = xhr.status === 401 ? 'Logged out — reload' : xhr.status === 404 ? 'Upload expired — retry' : `Upload failed (${xhr.status})`;
+        if (xhr.status === 401) location.replace('/login');
+        reject(Object.assign(new Error(msg), { fatal }));
+      };
+      xhr.send(blob);
+    });
+  }
+
+  async function startChunked(item, p, mime) {
+    let sess;
+    try {
+      const r = await fetch('/api/uploads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: item.name, type: mime, size: item.file.size }) });
+      if (r.status === 401) return loggedOut(item);
+      if (r.status === 413) return fail(item, tooLargeMessage());
+      if (r.status === 507) return fail(item, 'Storage full');
+      if (r.status !== 201) return fail(item, `Upload failed (${r.status})`);
+      sess = await r.json();
+    } catch { return fail(item, 'Connection lost'); }
+    if (item.state !== 'uploading') { fetch(`/api/uploads/${encodeURIComponent(sess.id)}`, { method: 'DELETE', keepalive: true }).catch(() => {}); return; }
+    p.session = sess.id;
+    for (let i = 0; i < sess.chunks; i++) {
+      const start = i * sess.chunkSize, end = Math.min(item.file.size, start + sess.chunkSize);
+      for (let attempt = 0; ; attempt++) {
+        if (item.state !== 'uploading' || p.session !== sess.id) return;     // cancelled meanwhile
+        try { await putChunk(item, p, sess.id, i, item.file.slice(start, end), start); break; }
+        catch (err) {
+          if (err.fatal || attempt >= CHUNK_RETRIES) { p.session = null; return fail(item, err.message || 'Connection lost'); }
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));   // transient: retry just this part
+        }
+      }
+    }
+    if (item.state !== 'uploading' || p.session !== sess.id) return;
+    let meta = null;
+    try {
+      const r = await fetch(`/api/uploads/${encodeURIComponent(sess.id)}/complete`, { method: 'POST' });
+      if (r.status === 401) return loggedOut(item);
+      if (r.status !== 201) { p.session = null; return fail(item, `Upload failed (${r.status})`); }
+      meta = await r.json();
+    } catch { p.session = null; return fail(item, 'Connection lost'); }
+    if (item.state !== 'uploading') return;
+    p.session = null;
+    if (!meta || typeof meta.id !== 'string') return fail(item, 'Unexpected server response');
+    item.serverId = meta.id;
+    item.loaded = item.total;
+    item.rate = 0;
+    item.state = 'done';
+    if (seenServerList) setTimeout(() => { if (items.includes(item) && item.state === 'done') { removeItem(item.id); notify(); } }, 0);
+    notify();
+    pump();
+    if (mime.startsWith('image/')) sendThumb(item.file, meta.id);
   }
 
   function fail(item, reason) {

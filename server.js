@@ -11,6 +11,7 @@ import { registerAuthRoutes } from './lib/routes-auth.js';
 import { createDoc } from './lib/doc.js';
 import { createFiles } from './lib/files.js';
 import { registerFileRoutes } from './lib/routes-files.js';
+import { registerUploadRoutes } from './lib/routes-uploads.js';
 import { registerHistoryRoutes } from './lib/routes-history.js';
 import { createWs } from './lib/ws.js';
 
@@ -48,6 +49,7 @@ export async function start(overrides = {}) {
   const router = createRouter();
   registerAuthRoutes({ router, cfg, auth, staticServer, log: log.child('auth') });
   registerFileRoutes({ router, cfg, files, log: log.child('files') });
+  const uploads = registerUploadRoutes({ router, cfg, files, log: log.child('files') });
   registerHistoryRoutes({ router, cfg, doc, log: log.child('history') });
 
   const http = createHttpServer({
@@ -82,6 +84,7 @@ export async function start(overrides = {}) {
     closing = (async () => {
       http.setDraining(true);
       clearInterval(sweepTimer);
+      uploads.close();
       http.server.close();
       if (typeof http.server.closeIdleConnections === 'function') http.server.closeIdleConnections();
       ws.shutdown(reason);

@@ -100,6 +100,23 @@ All are read once at boot by `lib/config.js`; the effective configuration is log
 
 Password resolution order: `PASSWORD_HASH` → `PASSWORD_FILE` → `PASSWORD` → `DATA_DIR/password.hash` → generate and print. Environment always wins over the file on the volume; there is never a built-in default password.
 
+## Remote access (outside your LAN)
+
+Shelf itself only speaks plain HTTP on one port; something in front of it provides HTTPS and a public name. Pick one:
+
+**Cloudflare Tunnel (recommended, no port forwarding).** Needs a domain on Cloudflare (free plan is fine).
+
+1. Cloudflare dashboard → Zero Trust → Networks → Tunnels → *Create a tunnel* (connector: cloudflared). Copy the token.
+2. Under the tunnel's *Public hostnames* add e.g. `shelf.example.com` → service `http://shelf:8080`.
+3. `echo 'TUNNEL_TOKEN=<token>' >> .env`
+4. `docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build`
+
+The override (`docker-compose.tunnel.yml`) adds the connector, sets `TRUST_PROXY=1` and `COOKIE_SECURE=true`, and stops publishing port 8080 on the host, so the only way in is the tunnel. Cloudflare caps single requests at 100 MB; Shelf uploads anything above 8 MiB in 8 MiB parts (`/api/uploads`), so file size is limited only by `MAX_FILE_MB`. Optionally put Cloudflare Access (a login page of Cloudflare's own) in front of the hostname for a second layer.
+
+**Own domain + Caddy.** Forward ports 80 and 443 to the box, point a DNS name at your public IP, run Caddy with `shelf.example.com { reverse_proxy shelf:8080 }` on the same Docker network and set `TRUST_PROXY=1`. See the proxy section below.
+
+**Tailscale.** Install Tailscale on the server and the phone, then `tailscale serve --bg 8080` on the server: HTTPS on `https://<machine>.<tailnet>.ts.net`, nothing exposed to the public internet. Leave `TRUST_PROXY=0`; set `COOKIE_SECURE=auto` (default).
+
 ## Reverse proxy
 
 Shelf speaks plain HTTP and expects TLS to be terminated in front of it. It needs three things from the proxy: WebSocket upgrades on `/ws`, `X-Forwarded-Proto` (so the session cookie gets `Secure`), and request bodies as large as `MAX_FILE_MB`. Set `TRUST_PROXY=1` so the login rate limiter sees real client IPs, and remove the `ports:` mapping from compose once only the proxy network reaches the container.
